@@ -1,0 +1,20 @@
+@startuml AddIssueSequence
+actor User
+participant FE as "Frontend (Angular)"
+participant Controller as "IssuesController"
+participant Service as "IssueService"
+participant Repo as "IssueRepository"
+database DB as "ScaleTrack DB"
+
+User -> FE : Create new Issue
+FE -> Controller : POST /api/v1/issues\n{ title, description, type, priority, status }
+Controller -> Service : CreateIssue(IssueDto)
+Service -> Repo : AddAsync(Issue entity)
+Repo -> DB : INSERT INTO Issue (Title, Description, Type, Priority, Status, CreatedAt, UpdatedAt)
+DB --> Repo : Issue saved with Id, CreatedAt, UpdatedAt
+Repo --> Service : Saved Issue entity
+Service --> Controller : IssueDto
+Controller --> FE : 201 Created\nReturn IssueDto
+FE --> User : Display new issue
+@enduml
+

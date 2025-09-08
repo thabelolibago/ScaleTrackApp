@@ -1,0 +1,68 @@
+@startuml ScaleTrackERD
+
+entity "Issue" as Issue {
+  * Id : int <<PK>>
+  --
+  Title : string
+  Description : string
+  Type : string
+  Priority : string
+  Status : string
+  CreatedAt : datetime
+  UpdatedAt : datetime
+}
+
+entity "User" as User {
+  * Id : int <<PK>>
+  --
+  FirstName : string
+  LastName : string
+  Email : string
+  Role : string
+}
+
+entity "Comment" as Comment {
+  * Id : int <<PK>>
+  --
+  IssueId : int <<FK>>
+  UserId : int <<FK>>
+  Content : string
+  CreatedAt : datetime
+}
+
+entity "Tag" as Tag {
+  * Id : int <<PK>>
+  --
+  Name : string
+}
+
+entity "IssueTag" as IssueTag {
+  * IssueId : int <<FK>>
+  * TagId : int <<FK>>
+}
+
+entity "AuditTrail" as AuditTrail {
+  * Id : int <<PK>>
+  --
+  EntityName : string
+  EntityId : int
+  Action : string
+  ChangedBy : int <<FK>>
+  ChangedAt : datetime
+  Changes : string
+  ApprovedBy : int <<FK>>
+  ApprovedAt : datetime
+  ApprovalStatus : string
+}
+
+Issue ||--o{ Comment : "has"
+User ||--o{ Comment : "writes"
+
+Issue ||--o{ IssueTag : "tagged"
+Tag ||--o{ IssueTag : "assigned"
+
+User ||--o{ AuditTrail : "performs changes (ChangedBy)"
+User ||--o{ AuditTrail : "approves changes (ApprovedBy)"
+
+@enduml
+

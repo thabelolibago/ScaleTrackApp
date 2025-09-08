@@ -1,0 +1,25 @@
+@startuml UpdateIssueSequence
+actor User
+participant FE as "Frontend (Angular)"
+participant Controller as "IssuesController"
+participant Service as "IssueService"
+participant Repo as "IssueRepository"
+database DB as "ScaleTrack DB"
+
+User -> FE : Change issue status (e.g., Open -> Resolved)
+FE -> Controller : PUT /api/v1/issues/{id}/status\n{ "status": "Resolved" }
+Controller -> Service : UpdateIssueStatus(issueId, status)
+Service -> Repo : GetById(issueId)
+Repo -> DB : SELECT * FROM Issue WHERE Id = issueId
+DB --> Repo : Issue entity
+Repo --> Service : Issue entity
+Service -> Repo : UpdateAsync(issue entity with new Status)
+Repo -> DB : UPDATE Issue SET Status, UpdatedAt WHERE Id = issueId
+DB --> Repo : OK
+Repo --> Service : Updated Issue entity
+Service --> Controller : IssueDto
+Controller --> FE : 200 OK\nReturn updated IssueDto
+FE --> User : Display updated issue status
+@enduml
+
+

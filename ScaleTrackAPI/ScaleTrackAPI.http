@@ -1,0 +1,6 @@
+@ScaleTrackAPI_HostAddress = http://localhost:5165
+
+GET {{ScaleTrackAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

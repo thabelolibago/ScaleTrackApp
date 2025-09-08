@@ -1,0 +1,20 @@
+@startuml AddCommentSequence
+actor User
+participant FE as "Front-End"
+participant Controller as "CommentsController"
+participant Service as "CommentService"
+participant Repo as "CommentRepository"
+database DB as "ScaleTrack DB"
+
+User -> FE : Add comment to an issue
+FE -> Controller : POST /api/v1/issues/{issueId}/comments\n{ userId, content }
+Controller -> Service : AddComment(CommentDto)
+Service -> Repo : AddCommentAsync(Comment entity)
+Repo -> DB : INSERT INTO Comment (IssueId, UserId, Content, CreatedAt)
+DB --> Repo : Comment saved
+Repo --> Service : Comment entity with Id and CreatedAt
+Service --> Controller : CommentDto
+Controller --> FE : 201 Created\nReturn CommentDto
+FE --> User : Display new comment
+@enduml
+

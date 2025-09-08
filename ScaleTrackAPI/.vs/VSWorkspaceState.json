@@ -1,0 +1,13 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\Controllers",
+    "\\DTOs",
+    "\\Mappers",
+    "\\Repositories",
+    "\\Repositories\\IssueRepository",
+    "\\Services"
+  ],
+  "SelectedNode": "\\Mappers\\IssueMapper.cs",
+  "PreviewInSolutionExplorer": false
+}
