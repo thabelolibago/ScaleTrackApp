@@ -3,6 +3,7 @@ using ScaleTrackAPI.Repositories;
 using ScaleTrackAPI.Mappers;
 using ScaleTrackAPI.Errors;
 using ScaleTrackAPI.Helpers;
+using ScaleTrackAPI.Messages;
 
 namespace ScaleTrackAPI.Services
 {
@@ -18,17 +19,20 @@ namespace ScaleTrackAPI.Services
             return comments.Select(CommentMapper.ToResponse).ToList();
         }
 
-        public async Task<CommentResponse?> GetById(int issueId, int id)
+        public async Task<(CommentResponse? Response, AppError? Error)> GetById(int issueId, int id)
         {
             var comment = await _repo.GetById(issueId, id);
-            return comment == null ? null : CommentMapper.ToResponse(comment);
+            if (comment == null)
+                return (null, AppError.NotFound(ErrorMessages.Get("CommentNotFound", id)));
+
+            return (CommentMapper.ToResponse(comment), null);
         }
 
         public async Task<(CommentResponse? Response, AppError? Error)> AddCommentAsync(int issueId, CommentRequest request)
         {
             var issue = await _issueRepo.GetById(issueId);
             if (issue == null)
-                return (null, AppError.NotFound($"Issue with id {issueId} not found."));
+                return (null, AppError.NotFound(ErrorMessages.Get("IssueForCommentNotFound", issueId)));
 
             var validation = _validator.Validate(request);
             if (!validation.IsValid)
@@ -37,17 +41,20 @@ namespace ScaleTrackAPI.Services
             var comment = CommentMapper.ToModel(issueId, request);
             var created = await _repo.Add(comment);
 
+            if (created == null)
+                return (null, AppError.Unexpected(ErrorMessages.Get("UnexpectedError")));
+
             return (CommentMapper.ToResponse(created), null);
         }
 
-        public async Task<AppError?> DeleteCommentAsync(int issueId, int id)
+        public async Task<(AppError? Error, string? Message)> DeleteCommentAsync(int issueId, int id)
         {
             var comment = await _repo.GetById(issueId, id);
             if (comment == null)
-                return AppError.NotFound($"Comment with id {id} not found for issue {issueId}.");
+                return (AppError.NotFound(ErrorMessages.Get("CommentNotFound", id)), null);
 
             await _repo.Delete(comment);
-            return null;
+            return (null, SuccessMessages.Get("CommentDeleted"));
         }
     }
 }

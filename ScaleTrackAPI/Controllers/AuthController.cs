@@ -17,43 +17,49 @@ namespace ScaleTrackAPI.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            var result = await _auth.LoginAsync(request);
-            if (result == null) return Unauthorized(new { message = "Invalid email or password." });
-            return Ok(result);
+            var (entity, error) = await _auth.LoginAsync(request);
+
+            if (error is not null)
+                return Unauthorized(new { error.Message });
+
+            return Ok(entity);
         }
 
         [HttpPost("register")]
         [AllowAnonymous]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
-            var (response, error) = await _userService.RegisterUser(request);
-            if (error != null)
-            {
-                return error.Code switch
-                {
-                    "ValidationError" => BadRequest(error),
-                    "Conflict" => Conflict(error),
-                    _ => BadRequest(error)
-                };
-            }
+            var (response, error, message) = await _userService.RegisterUser(request);
 
-            return CreatedAtAction(nameof(Login), new { email = request.Email }, response);
+            if (error != null)
+                return BadRequest(new { error.Message });
+
+            return CreatedAtAction(nameof(Login), new { email = request.Email }, new
+            {
+                Data = response,
+                Message = message
+            });
         }
 
         [HttpPost("refresh")]
         public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequest request)
         {
-            var result = await _auth.RefreshTokenAsync(request);
-            if (result == null) return Unauthorized(new { message = "Invalid refresh token" });
-            return Ok(result);
+            var (entity, error) = await _auth.RefreshTokenAsync(request);
+
+            if (error is not null)
+                return Unauthorized(new { error.Message });
+
+            return Ok(entity);
         }
 
         [HttpPost("logout")]
         public async Task<IActionResult> Logout([FromBody] LogoutRequest request)
         {
-            var success = await _auth.LogoutAsync(request);
-            return Ok(new { success });
+            var error = await _auth.LogoutAsync(request);
+            if (error is not null)
+                return BadRequest(new { error.Message });
+
+            return Ok();
         }
     }
-
 }

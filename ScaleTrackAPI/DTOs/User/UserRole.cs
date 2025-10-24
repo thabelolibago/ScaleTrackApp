@@ -1,9 +1,16 @@
+using System.ComponentModel;
+
 namespace ScaleTrackAPI.DTOs.User
 {
     public enum UserRole
     {
-        Admin,
-        Developer,
-        Viewer
+        [Description("Admin")]
+        Admin = 0,
+
+        [Description("Developer")]
+        Developer = 1,
+
+        [Description("Viewer")]
+        Viewer = 2
     }
 }

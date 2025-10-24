@@ -23,37 +23,33 @@ namespace ScaleTrackAPI.Controllers
         [HttpGet("{id:int}")]
         public async Task<ActionResult<TagResponse>> GetById(int id)
         {
-            var tag = await _service.GetById(id);
-            return tag == null ? NotFound() : Ok(tag);
+            var (tag, error, _) = await _service.GetByIdWithMessage(id);
+            if (error is not null) return NotFound(new { error.Message });
+            return Ok(tag);
         }
 
         [HttpPost]
         [Authorize(Roles = "Admin,Developer")]
         public async Task<IActionResult> Create([FromBody] TagRequest request)
         {
-            var (response, error) = await _service.CreateTag(request);
-            if (error != null)
-            {
-                return error.Code switch
-                {
-                    "ValidationError" => BadRequest(error),
-                    "Conflict" => Conflict(error),
-                    _ => BadRequest(error)
-                };
-            }
+            var (response, error, message) = await _service.CreateTag(request);
 
-            return CreatedAtAction(nameof(GetById), new { id = response!.Id }, response);
+            if (error is not null)
+                return BadRequest(new { error.Message });
+
+            return CreatedAtAction(nameof(GetById), new { id = response!.Id }, new { Data = response, Message = message });
         }
 
         [HttpDelete("{id:int}")]
         [Authorize(Roles = "Admin,Developer")]
         public async Task<IActionResult> Delete(int id)
         {
-            var error = await _service.DeleteTag(id);
-            if (error != null)
-                return NotFound(error);
+            var (error, message) = await _service.DeleteTag(id);
 
-            return NoContent();
+            if (error is not null)
+                return BadRequest(new { error.Message });
+
+            return Ok(new { Message = message });
         }
     }
 }

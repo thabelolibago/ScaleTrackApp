@@ -3,6 +3,7 @@ using ScaleTrackAPI.Repositories;
 using ScaleTrackAPI.Mappers;
 using ScaleTrackAPI.Helpers;
 using ScaleTrackAPI.Errors;
+using ScaleTrackAPI.Messages;
 
 namespace ScaleTrackAPI.Services
 {
@@ -17,10 +18,13 @@ namespace ScaleTrackAPI.Services
             return issues.Select(IssueMapper.ToResponse).ToList();
         }
 
-        public async Task<IssueResponse?> GetById(int id)
+        public async Task<(IssueResponse? Response, AppError? Error)> GetById(int id)
         {
             var issue = await _repo.GetById(id);
-            return issue == null ? null : IssueMapper.ToResponse(issue);
+            if (issue == null)
+                return (null, AppError.NotFound(ErrorMessages.Get("IssueNotFound", id)));
+
+            return (IssueMapper.ToResponse(issue), null);
         }
 
         public async Task<(IssueResponse? Response, AppError? Error)> CreateIssue(IssueRequest request)
@@ -31,6 +35,9 @@ namespace ScaleTrackAPI.Services
 
             var issue = IssueMapper.ToModel(request);
             var created = await _repo.AddIssue(issue);
+            if (created == null)
+                return (null, AppError.Unexpected(ErrorMessages.Get("UnexpectedError")));
+
             return (IssueMapper.ToResponse(created), null);
         }
 
@@ -42,39 +49,56 @@ namespace ScaleTrackAPI.Services
 
             var issue = await _repo.GetById(id);
             if (issue == null)
-                return (null, AppError.NotFound($"Issue with id {id} not found."));
+                return (null, AppError.NotFound(ErrorMessages.Get("IssueNotFound", id)));
 
             issue.Title = request.Title;
             issue.Description = request.Description;
-            issue.Type = Enum.Parse<IssueType>(request.Type, true);
+            issue.Type = request.Type;
             issue.Priority = request.Priority;
             issue.UpdatedAt = DateTime.UtcNow;
 
             var updated = await _repo.UpdateIssue(issue);
-            return (updated == null ? null : IssueMapper.ToResponse(updated), null);
+            if (updated == null)
+                return (null, AppError.Unexpected(ErrorMessages.Get("UnexpectedError")));
+
+            return (IssueMapper.ToResponse(updated), null);
         }
 
-
-        public async Task<(IssueResponse? Response, AppError? Error)> UpdateIssueStatus(int id, IssueStatus status)
+        public async Task<(IssueResponse? Response, AppError? Error, string? Message)> UpdateIssueStatus(int id, int statusIndex)
         {
+
+            if (!Enum.IsDefined(typeof(IssueStatus), statusIndex))
+            {
+                return (null, AppError.Validation(ErrorMessages.Get("InvalidIssueStatus", statusIndex)), null);
+            }
+
+            var status = (IssueStatus)statusIndex;
+
             var issue = await _repo.GetById(id);
             if (issue == null)
-                return (null, AppError.NotFound($"Issue with id {id} not found."));
+                return (null, AppError.NotFound(ErrorMessages.Get("IssueNotFound", id)), null);
 
             issue.Status = status;
             issue.UpdatedAt = DateTime.UtcNow;
 
             var updated = await _repo.UpdateIssue(issue);
-            return (updated == null ? null : IssueMapper.ToResponse(updated), null);
+            if (updated == null)
+                return (null, AppError.Unexpected(ErrorMessages.Get("UnexpectedError")), null);
+
+            var successMessage = SuccessMessages.Get("IssueUpdated");
+
+            return (IssueMapper.ToResponse(updated), null, successMessage);
         }
 
-        public async Task<AppError?> DeleteIssue(int id)
+
+        public async Task<(AppError? Error, string Message)> DeleteIssue(int id)
         {
             var issue = await _repo.GetById(id);
-            if (issue == null) return AppError.NotFound($"Issue with id {id} not found.");
+            if (issue == null)
+                return (AppError.NotFound(ErrorMessages.Get("IssueNotFound", id)), null);
 
             await _repo.DeleteIssue(id);
-            return null;
+            return (null, SuccessMessages.Get("IssueDeleted"));
         }
     }
 }

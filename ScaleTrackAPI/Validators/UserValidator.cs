@@ -20,8 +20,9 @@ namespace ScaleTrackAPI.Helpers
             if (string.IsNullOrWhiteSpace(request.Email))
                 errors.Add("Email is required.");
 
-            if (!Enum.TryParse<UserRole>(request.Role, true, out _))
+            if (!Enum.IsDefined(typeof(UserRole), request.Role))
                 errors.Add($"Role must be one of: {string.Join(", ", Enum.GetNames<UserRole>())}");
+
 
             return errors.Count == 0
                 ? ValidationResult.Success()

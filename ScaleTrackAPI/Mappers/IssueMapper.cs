@@ -21,13 +21,10 @@ namespace ScaleTrackAPI.Mappers
         {
             Title = request.Title,
             Description = request.Description,
-            Type = Enum.Parse<IssueType>(request.Type, true),
+            Type = request.Type,
             Priority = request.Priority,
             Status = IssueStatus.Open,
             CreatedAt = DateTime.UtcNow
         };
-
     }
 }
-
-

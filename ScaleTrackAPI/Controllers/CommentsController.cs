@@ -24,8 +24,9 @@ namespace ScaleTrackAPI.Controllers
         [Authorize]
         public async Task<ActionResult<CommentResponse>> GetById(int issueId, int id)
         {
-            var comment = await _service.GetById(issueId, id);
-            return comment == null ? NotFound() : Ok(comment);
+            var (comment, error) = await _service.GetById(issueId, id);
+            if (error is not null) return NotFound(new { error.Message });
+            return Ok(comment);
         }
 
         [HttpPost]
@@ -33,9 +34,7 @@ namespace ScaleTrackAPI.Controllers
         public async Task<IActionResult> AddComment(int issueId, [FromBody] CommentRequest request)
         {
             var (response, error) = await _service.AddCommentAsync(issueId, request);
-            if (error != null)
-                return error.Code == "NotFound" ? NotFound(error) : BadRequest(error);
-
+            if (error is not null) return BadRequest(new { error.Message });
             return CreatedAtAction(nameof(GetById), new { issueId, id = response!.Id }, response);
         }
 
@@ -43,11 +42,12 @@ namespace ScaleTrackAPI.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteComment(int issueId, int id)
         {
-            var error = await _service.DeleteCommentAsync(issueId, id);
-            if (error != null)
-                return NotFound(error);
+            var (error, message) = await _service.DeleteCommentAsync(issueId, id);
 
-            return NoContent();
+            if (error is not null)
+                return BadRequest(new { error.Message });
+
+            return Ok(new { Message = message });
         }
     }
 }
