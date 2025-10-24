@@ -24,24 +24,25 @@ namespace ScaleTrackAPI.Controllers
         [Authorize(Roles = "Admin,Developer")]
         public async Task<IActionResult> Add(int issueId, [FromBody] IssueTagRequest request)
         {
-            var (response, error) = await _service.AddTag(issueId, request);
-            if (error != null)
-                return error.Code == "NotFound" ? NotFound(error) :
-                       error.Code == "Conflict" ? Conflict(error) :
-                       BadRequest(error);
+            var (response, error, message) = await _service.AddTag(issueId, request);
 
-            return CreatedAtAction(nameof(GetAll), new { issueId }, response);
+            if (error is not null)
+                return BadRequest(new { error.Message });
+
+            return CreatedAtAction(nameof(GetAll), new { issueId }, new { Data = response, Message = message });
         }
 
         [HttpDelete("{tagId:int}")]
         [Authorize(Roles = "Admin,Developer")]
         public async Task<IActionResult> Delete(int issueId, int tagId)
         {
-            var error = await _service.RemoveTag(issueId, tagId);
-            if (error != null)
-                return NotFound(error);
+            var (error, message) = await _service.RemoveTag(issueId, tagId);
 
-            return NoContent();
+            if (error is not null)
+                return BadRequest(new { error.Message });
+
+            return Ok(new { Message = message });
         }
+
     }
 }

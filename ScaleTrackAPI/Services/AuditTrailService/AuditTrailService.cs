@@ -6,10 +6,16 @@ using ScaleTrackAPI.Helpers;
 
 namespace ScaleTrackAPI.Services
 {
-    public class AuditTrailService(IAuditTrailRepository repo, IValidator<AuditTrailRequest> validator)
+    public class AuditTrailService
     {
-        private readonly IAuditTrailRepository _repo = repo;
-        private readonly IValidator<AuditTrailRequest> _validator = validator;
+        private readonly IAuditTrailRepository _repo;
+        private readonly IValidator<AuditTrailRequest> _validator;
+
+        public AuditTrailService(IAuditTrailRepository repo, IValidator<AuditTrailRequest> validator)
+        {
+            _repo = repo;
+            _validator = validator;
+        }
 
         public async Task<List<AuditTrailResponse>> GetAllAuditTrails()
         {
@@ -17,20 +23,30 @@ namespace ScaleTrackAPI.Services
             return audits.Select(AuditTrailMapper.ToResponse).ToList();
         }
 
-        public async Task<AuditTrailResponse?> GetById(int id)
+        public async Task<(AuditTrailResponse? Entity, AppError? Error)> GetById(int id)
         {
             var audit = await _repo.GetById(id);
-            return audit == null ? null : AuditTrailMapper.ToResponse(audit);
+            if (audit == null)
+                return (null, AppError.NotFound(ErrorMessages.Get("AuditNotFound", id)));
+
+            return (AuditTrailMapper.ToResponse(audit), null);
         }
 
         public async Task<(AuditTrailResponse? Entity, AppError? Error)> CreateAuditTrail(AuditTrailRequest request)
         {
             var validation = _validator.Validate(request);
             if (!validation.IsValid)
-                return (null, AppError.Validation(string.Join("; ", validation.Errors)));
+            {
+                var message = string.Join("; ", validation.Errors);
+                return (null, AppError.Validation(message));
+            }
 
             var audit = AuditTrailMapper.ToModel(request);
             var created = await _repo.Add(audit);
+
+            if (created == null)
+                return (null, AppError.Unexpected(ErrorMessages.Get("AuditCreationFailed")));
+
             return (AuditTrailMapper.ToResponse(created), null);
         }
 
@@ -38,21 +54,23 @@ namespace ScaleTrackAPI.Services
         {
             var audit = await _repo.GetById(id);
             if (audit == null)
-                return (null, AppError.NotFound($"Audit trail {id} not found."));
+                return (null, AppError.NotFound(ErrorMessages.Get("AuditNotFound", id)));
 
             audit.ApprovedBy = approverId;
             audit.ApprovedAt = DateTime.UtcNow;
 
             var updated = await _repo.Update(audit);
-            return updated == null ? (null, AppError.NotFound("Update failed.")) 
-                                   : (AuditTrailMapper.ToResponse(updated), null);
+            if (updated == null)
+                return (null, AppError.Unexpected(ErrorMessages.Get("AuditApprovalFailed")));
+
+            return (AuditTrailMapper.ToResponse(updated), null);
         }
 
         public async Task<AppError?> DeleteAuditTrail(int id)
         {
             var audit = await _repo.GetById(id);
             if (audit == null)
-                return AppError.NotFound($"Audit trail {id} not found.");
+                return AppError.NotFound(ErrorMessages.Get("AuditNotFound", id));
 
             await _repo.Delete(audit);
             return null;

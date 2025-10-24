@@ -1,34 +1,48 @@
 using ScaleTrackAPI.Models;
 using ScaleTrackAPI.DTOs.User;
+using System;
 
 namespace ScaleTrackAPI.Mappers
 {
     public static class UserMapper
     {
-        public static UserResponse ToResponse(User user) => new()
+        public static UserResponse ToResponse(User user)
         {
-            Id = user.Id,
-            FirstName = user.FirstName,
-            LastName = user.LastName,
-            Email = user.Email,
-            Role = user.Role
-        };
+            var role = Enum.TryParse<UserRole>(user.Role, out var parsedRole)
+                       ? parsedRole
+                       : UserRole.Viewer;
 
-        public static User ToModel(UserRequest request) => new()
-        {
-            FirstName = request.FirstName,
-            LastName = request.LastName,
-            Email = request.Email,
-            UserName = request.Email,
-            Role = request.Role ?? UserRole.Viewer.ToString()
-        };
+            return new UserResponse
+            {
+                Id = user.Id,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Email = user.Email ?? string.Empty,
+                Role = role
+            };
+        }
 
-        public static UserRequest FromRegisterRequest(RegisterRequest request) => new()
+        public static User ToModel(UserRequest request)
         {
-            FirstName = request.FirstName,
-            LastName = request.LastName,
-            Email = request.Email,
-            Role = UserRole.Viewer.ToString()
-        };
+            return new User
+            {
+                FirstName = request.FirstName,
+                LastName = request.LastName,
+                Email = request.Email,
+                UserName = request.Email,
+                Role = request.Role.ToString() 
+            };
+        }
+
+        public static UserRequest FromRegisterRequest(RegisterRequest request)
+        {
+            return new UserRequest
+            {
+                FirstName = request.FirstName,
+                LastName = request.LastName,
+                Email = request.Email,
+                Role = UserRole.Viewer 
+            };
+        }
     }
 }

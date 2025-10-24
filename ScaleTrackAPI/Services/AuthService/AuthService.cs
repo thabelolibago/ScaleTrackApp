@@ -4,6 +4,8 @@ using ScaleTrackAPI.DTOs.Auth;
 using ScaleTrackAPI.DTOs.User;
 using ScaleTrackAPI.Models;
 using ScaleTrackAPI.Repositories;
+using ScaleTrackAPI.Errors;
+using ScaleTrackAPI.Mappers;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -21,20 +23,22 @@ namespace ScaleTrackAPI.Services.Auth
         private readonly IConfiguration _config = config;
         private readonly IRefreshTokenRepository _refreshTokenRepo = refreshTokenRepo;
 
-        public async Task<LoginResponse?> LoginAsync(LoginRequest request)
+        public async Task<(LoginResponse? Entity, AppError? Error)> LoginAsync(LoginRequest request)
         {
             var user = await _userManager.FindByEmailAsync(request.Email);
-            if (user == null) return null;
+            if (user == null)
+                return (null, AppError.Unauthorized(ErrorMessages.Get("InvalidCredentials")));
 
             var pepper = _config["Security:PasswordPepper"] ?? "";
             var passwordWithPepper = request.Password + pepper;
 
             var result = await _signInManager.CheckPasswordSignInAsync(user, passwordWithPepper, false);
-            if (!result.Succeeded) return null;
+            if (!result.Succeeded)
+                return (null, AppError.Unauthorized(ErrorMessages.Get("InvalidCredentials")));
 
             var (accessToken, refreshToken) = await GenerateTokensAsync(user);
 
-            return new LoginResponse
+            var response = new LoginResponse
             {
                 Token = accessToken,
                 RefreshToken = refreshToken,
@@ -43,27 +47,39 @@ namespace ScaleTrackAPI.Services.Auth
                     Id = user.Id,
                     FirstName = user.FirstName,
                     LastName = user.LastName,
-                    Email = user.Email!,
-                    Role = user.Role
+                    Email = user.Email ?? "",
+                    Role = Enum.TryParse<UserRole>(user.Role, out var parsedRole)
+                           ? parsedRole
+                           : UserRole.Viewer
+
                 }
             };
+
+            return (response, null);
         }
 
-        public async Task<LoginResponse?> RefreshTokenAsync(RefreshTokenRequest request)
+        public async Task<(LoginResponse? Entity, AppError? Error)> RefreshTokenAsync(RefreshTokenRequest request)
         {
             var storedToken = await _refreshTokenRepo.GetByTokenAsync(request.RefreshToken);
 
-            if (storedToken == null || storedToken.IsRevoked || storedToken.IsUsed || storedToken.Expires < DateTime.UtcNow)
-                return null;
+            if (storedToken == null)
+                return (null, AppError.Unauthorized(ErrorMessages.Get("InvalidToken")));
 
+            if (storedToken.IsRevoked || storedToken.IsUsed || storedToken.Expires < DateTime.UtcNow)
+                return (null, AppError.Unauthorized(ErrorMessages.Get("TokenExpired")));
+
+            // mark used
             storedToken.IsUsed = true;
             await _refreshTokenRepo.UpdateAsync(storedToken);
             await _refreshTokenRepo.SaveChangesAsync();
 
-            var user = storedToken.User!;
+            var user = storedToken.User;
+            if (user == null)
+                return (null, AppError.Unauthorized(ErrorMessages.Get("InvalidToken")));
+
             var (newAccessToken, newRefreshToken) = await GenerateTokensAsync(user);
 
-            return new LoginResponse
+            var response = new LoginResponse
             {
                 Token = newAccessToken,
                 RefreshToken = newRefreshToken,
@@ -72,29 +88,42 @@ namespace ScaleTrackAPI.Services.Auth
                     Id = user.Id,
                     FirstName = user.FirstName,
                     LastName = user.LastName,
-                    Email = user.Email!,
-                    Role = user.Role
+                    Email = user.Email ?? "",
+                    Role = Enum.TryParse<UserRole>(user.Role, out var parsedRole)
+                            ? parsedRole
+                            : UserRole.Viewer
+
                 }
             };
+
+            return (response, null);
         }
 
-        public Task<bool> LogoutAsync(LogoutRequest request)
+        public async Task<AppError?> LogoutAsync(LogoutRequest request)
         {
-            return Task.FromResult(true);
+            var stored = await _refreshTokenRepo.GetByTokenAsync(request.RefreshToken);
+            if (stored == null)
+                return AppError.NotFound(ErrorMessages.Get("InvalidToken"));
+
+            stored.IsRevoked = true;
+            await _refreshTokenRepo.UpdateAsync(stored);
+            await _refreshTokenRepo.SaveChangesAsync();
+
+            return null;
         }
 
-        private async Task<(string AccessToken, string RefreshToken)> GenerateTokensAsync(User user)
+        public async Task<(string AccessToken, string RefreshToken)> GenerateTokensAsync(User user)
         {
             var minutes = int.TryParse(_config["Jwt:AccessTokenMinutes"], out var m) ? m : 60;
 
             var claims = new List<Claim>
-            {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Email ?? user.Id.ToString()),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Email, user.Email ?? ""),
-                new Claim(ClaimTypes.Role, user.Role)
-            };
+    {
+        new Claim(JwtRegisteredClaimNames.Sub, user.Email ?? user.Id.ToString()),
+        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+        new Claim(ClaimTypes.Email, user.Email ?? ""),
+        new Claim(ClaimTypes.Role, user.Role)
+    };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

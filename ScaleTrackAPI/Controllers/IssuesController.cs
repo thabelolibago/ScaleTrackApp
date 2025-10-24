@@ -1,8 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using ScaleTrackAPI.Services;
-using ScaleTrackAPI.Errors;
 using Microsoft.AspNetCore.Authorization;
 using ScaleTrackAPI.DTOs.Issue;
+using ScaleTrackAPI.Errors;
+using ScaleTrackAPI.Messages;
 
 namespace ScaleTrackAPI.Controllers
 {
@@ -25,8 +26,8 @@ namespace ScaleTrackAPI.Controllers
         [Authorize(Roles = "Admin,Developer,Viewer")]
         public async Task<ActionResult<IssueResponse>> GetById(int id)
         {
-            var issue = await _service.GetById(id);
-            if (issue == null) return NotFound();
+            var (issue, error) = await _service.GetById(id);
+            if (error is not null) return NotFound(new { error.Message });
             return Ok(issue);
         }
 
@@ -41,41 +42,39 @@ namespace ScaleTrackAPI.Controllers
             return CreatedAtAction(nameof(GetById), new { id = response!.Id }, response);
         }
 
+
         [HttpPut("{id:int}/update")]
         [Authorize(Roles = "Admin,Developer")]
         public async Task<IActionResult> Update(int id, [FromBody] IssueRequest request)
         {
             var (response, error) = await _service.UpdateIssue(id, request);
-
-            if (error != null)
-                return error.Code == "NotFound" ? NotFound(error) : BadRequest(error);
-
+            if (error is not null) return BadRequest(new { error.Message });
             return Ok(response);
         }
 
         [HttpPatch("{id:int}/status")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> UpdateStatus(int id, [FromBody] string status)
+        public async Task<IActionResult> UpdateStatus(int id, [FromBody] int statusIndex)
         {
-            if (!Enum.TryParse<IssueStatus>(status, true, out var parsedStatus))
-                return BadRequest(new AppError("ValidationError", "Invalid status value."));
+            var (response, error, message) = await _service.UpdateIssueStatus(id, statusIndex);
 
-            var (response, error) = await _service.UpdateIssueStatus(id, parsedStatus);
+            if (error is not null)
+                return BadRequest(new { error.Message });
 
-            if (error != null) return NotFound(error);
-
-            return Ok(response);
+            return Ok(new { Data = response, Message = message });
         }
+
 
         [HttpDelete("{id:int}/delete")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
-            var error = await _service.DeleteIssue(id);
+            var (error, message) = await _service.DeleteIssue(id);
 
-            if (error != null) return NotFound(error);
+            if (error is not null)
+                return BadRequest(new { error.Message });
 
-            return NoContent();
+            return Ok(new { Message = message });
         }
     }
 }

@@ -1,8 +1,13 @@
 using System.Net;
 using System.Text.Json;
+using ScaleTrackAPI.Errors;
 
 namespace ScaleTrackAPI.Middleware
 {
+    /// <summary>
+    /// Middleware for global exception handling.
+    /// Converts exceptions into consistent API error responses.
+    /// </summary>
     public class ExceptionMiddleware
     {
         private readonly RequestDelegate _next;
@@ -22,21 +27,17 @@ namespace ScaleTrackAPI.Middleware
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unhandled exception");
+                _logger.LogError(ex, "Unhandled exception occurred");
 
-                context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                context.Response.ContentType = "application/json";
-
-                var error = new
+                var errorResponse = new
                 {
-                    code = "InternalServerError",
-                    message = "An unexpected error occurred. Please try again later.",
-                    traceId = context.TraceIdentifier
+                    StatusCode = (int)HttpStatusCode.InternalServerError,
+                    Message = ErrorMessages.Get("UnexpectedError")
                 };
 
-                var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-
-                await context.Response.WriteAsync(JsonSerializer.Serialize(error, options));
+                context.Response.ContentType = "application/json";
+                context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                await context.Response.WriteAsync(JsonSerializer.Serialize(errorResponse));
             }
         }
     }

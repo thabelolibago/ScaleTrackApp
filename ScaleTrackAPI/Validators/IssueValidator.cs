@@ -1,4 +1,5 @@
 using ScaleTrackAPI.DTOs.Issue;
+using ScaleTrackAPI.Models;
 
 namespace ScaleTrackAPI.Helpers
 {
@@ -20,7 +21,7 @@ namespace ScaleTrackAPI.Helpers
             if (string.IsNullOrWhiteSpace(request.Description))
                 errors.Add("Description is required.");
 
-            if (!Enum.TryParse<IssueType>(request.Type, true, out _))
+            if (!Enum.IsDefined(typeof(IssueType), request.Type))
                 errors.Add("Invalid Issue Type.");
 
             if (!Enum.IsDefined(typeof(IssuePriority), request.Priority))

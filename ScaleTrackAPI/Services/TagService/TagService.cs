@@ -1,8 +1,9 @@
 using ScaleTrackAPI.DTOs.Tag;
 using ScaleTrackAPI.Repositories;
 using ScaleTrackAPI.Mappers;
-using ScaleTrackAPI.Helpers;
 using ScaleTrackAPI.Errors;
+using ScaleTrackAPI.Helpers;
+using ScaleTrackAPI.Messages;
 
 namespace ScaleTrackAPI.Services
 {
@@ -17,34 +18,50 @@ namespace ScaleTrackAPI.Services
             return tags.Select(TagMapper.ToResponse).ToList();
         }
 
-        public async Task<TagResponse?> GetById(int id)
-        {
-            var tag = await _repo.GetById(id);
-            return tag == null ? null : TagMapper.ToResponse(tag);
-        }
-
-        public async Task<(TagResponse? Response, AppError? Error)> CreateTag(TagRequest request)
-        {
-            var validation = _validator.Validate(request);
-            if (!validation.IsValid)
-                return (null, AppError.Validation(string.Join("; ", validation.Errors)));
-
-            if (await _repo.ExistsByName(request.Name))
-                return (null, AppError.Conflict($"Tag '{request.Name}' already exists."));
-
-            var tag = TagMapper.ToModel(request);
-            var created = await _repo.Add(tag);
-            return (TagMapper.ToResponse(created), null);
-        }
-
-        public async Task<AppError?> DeleteTag(int id)
+        public async Task<(TagResponse? Response, AppError? Error, string? Message)> GetByIdWithMessage(int id)
         {
             var tag = await _repo.GetById(id);
             if (tag == null)
-                return AppError.NotFound($"Tag with id {id} not found.");
+                return (null, AppError.NotFound(ErrorMessages.Get("TagNotFound", id)), null);
+
+            return (TagMapper.ToResponse(tag), null, null);
+        }
+
+        public async Task<(TagResponse? Response, AppError? Error, string? Message)> CreateTag(TagRequest request)
+        {
+            var validation = _validator.Validate(request);
+            if (!validation.IsValid)
+            {
+                var message = validation.Errors.Count > 0
+                              ? string.Join("; ", validation.Errors)
+                              : ErrorMessages.Get("ValidationFailed");
+                return (null, AppError.Validation(message), null);
+            }
+
+            if (await _repo.ExistsByName(request.Name))
+                return (null, AppError.Conflict(ErrorMessages.Get("TagAlreadyExists", request.Name)), null);
+
+            var tag = TagMapper.ToModel(request);
+            var created = await _repo.Add(tag);
+
+            if (created == null)
+                return (null, AppError.Unexpected(ErrorMessages.Get("UnexpectedError")), null);
+
+            var successMessage = SuccessMessages.Get("TagCreated");
+            return (TagMapper.ToResponse(created), null, successMessage);
+        }
+
+        public async Task<(AppError? Error, string? Message)> DeleteTag(int id)
+        {
+            var tag = await _repo.GetById(id);
+            if (tag == null)
+                return (AppError.NotFound(ErrorMessages.Get("TagNotFound", id)), null);
 
             await _repo.Delete(tag);
-            return null;
+
+            var successMessage = SuccessMessages.Get("TagDeleted");
+            return (null, successMessage);
         }
     }
 }
+

@@ -7,6 +7,7 @@ using ScaleTrackAPI.Models;
 using ScaleTrackAPI.Helpers;
 using ScaleTrackAPI.Extensions;
 using System.Security.Claims;
+using ScaleTrackAPI.Messages;
 
 namespace ScaleTrackAPI.Services
 {
@@ -20,21 +21,26 @@ namespace ScaleTrackAPI.Services
         public async Task<List<UserResponse>> GetAllUsers()
             => (await _repo.GetAll()).Select(UserMapper.ToResponse).ToList();
 
-        public async Task<UserResponse?> GetById(int id)
-            => (await _repo.GetById(id)) is User u ? UserMapper.ToResponse(u) : null;
+        public async Task<(UserResponse? Response, AppError? Error)> GetById(int id)
+        {
+            var u = await _repo.GetById(id);
+            if (u == null) return (null, AppError.NotFound(ErrorMessages.Get("UserNotFound", id)));
+            return (UserMapper.ToResponse(u), null);
+        }
 
-        public async Task<(UserResponse?, AppError?)> RegisterUser(RegisterRequest request)
+        public async Task<(UserResponse? Response, AppError? Error, string Message)> RegisterUser(RegisterRequest request)
         {
             if (request == null)
-                return (null, AppError.Validation("Request cannot be null."));
+                return (null, AppError.Validation("Request cannot be null."), string.Empty);
 
             var userRequest = UserMapper.FromRegisterRequest(request);
 
             var validationError = _validator.ToAppError(userRequest);
-            if (validationError != null) return (null, validationError);
+            if (validationError != null)
+                return (null, validationError, string.Empty);
 
             if (await _repo.GetByEmail(request.Email) != null)
-                return (null, AppError.Conflict($"User with email '{request.Email}' already exists."));
+                return (null, AppError.Conflict(ErrorMessages.Get("EmailAlreadyExists", request.Email)), string.Empty);
 
             var user = UserMapper.ToModel(userRequest);
             var passwordWithPepper = _passwordHelper.WithPepper(request.Password);
@@ -43,45 +49,55 @@ namespace ScaleTrackAPI.Services
             if (!result.Succeeded)
             {
                 var errors = string.Join("; ", result.Errors.Select(e => e.Description));
-                return (null, AppError.Validation(errors));
+                return (null, AppError.Validation(errors), string.Empty);
             }
 
             await _userManager.AddClaimAsync(user, new Claim(ClaimTypes.Role, user.Role));
 
-            return (UserMapper.ToResponse(user), null);
+            var response = UserMapper.ToResponse(user);
+
+            var message = SuccessMessages.Get("UserRegistered");
+
+            return (response, null, message);
         }
 
-        public async Task<AppError?> UpdateUserRole(int id, string role)
+        public async Task<(AppError? Error, string Message)> UpdateUserRole(int id, int roleIndex)
         {
-            if (!Enum.TryParse<UserRole>(role, true, out var parsedRole))
-                return AppError.Validation("Invalid role");
+            if (!Enum.IsDefined(typeof(UserRole), roleIndex))
+                return (AppError.Validation(ErrorMessages.Get("InvalidRole")), string.Empty);
+
+            var parsedRole = (UserRole)roleIndex;
 
             var user = await _repo.GetById(id);
-            if (user == null) return AppError.NotFound($"User with id {id} not found.");
+            if (user == null)
+                return (AppError.NotFound(ErrorMessages.Get("UserNotFound", id)), string.Empty);
 
             user.Role = parsedRole.ToString();
-            await _userManager.UpdateAsync(user);
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+                return (AppError.Conflict(ErrorMessages.Get("FailedToDeleteUser")), string.Empty);
 
-            return null;
+            return (null, SuccessMessages.Get("UserUpdated"));
         }
 
-        public async Task<AppError?> DeleteUser(int id)
+        public async Task<(AppError? Error, string? Message)> DeleteUser(int id)
         {
             var user = await _repo.GetById(id);
-            if (user == null) return AppError.NotFound($"User with id {id} not found.");
+            if (user == null) return (AppError.NotFound(ErrorMessages.Get("UserNotFound", id)), null);
 
             var identityUser = await _userManager.FindByIdAsync(id.ToString());
             if (identityUser != null)
             {
                 var res = await _userManager.DeleteAsync(identityUser);
-                if (!res.Succeeded) return AppError.Conflict("Failed to delete user.");
+                if (!res.Succeeded) return (AppError.Conflict(ErrorMessages.Get("FailedToDeleteUser")), null);
             }
             else
             {
                 await _repo.Delete(user);
             }
 
-            return null;
+            var successMessage = SuccessMessages.Get("UserDeleted");
+            return (null, successMessage);
         }
     }
 }

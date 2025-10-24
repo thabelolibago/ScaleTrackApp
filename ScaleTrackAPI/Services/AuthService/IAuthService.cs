@@ -1,11 +1,14 @@
 using ScaleTrackAPI.DTOs.Auth;
+using ScaleTrackAPI.Errors;
+using ScaleTrackAPI.Models;
 
 namespace ScaleTrackAPI.Services.Auth
 {
     public interface IAuthService
     {
-        Task<LoginResponse?> LoginAsync(LoginRequest request);
-        Task<LoginResponse?> RefreshTokenAsync(RefreshTokenRequest request);
-        Task<bool> LogoutAsync(LogoutRequest request);
+        Task<(LoginResponse? Entity, AppError? Error)> LoginAsync(LoginRequest request);
+        Task<(LoginResponse? Entity, AppError? Error)> RefreshTokenAsync(RefreshTokenRequest request);
+        Task<AppError?> LogoutAsync(LogoutRequest request);
+        Task<(string AccessToken, string RefreshToken)> GenerateTokensAsync(User user);
     }
 }

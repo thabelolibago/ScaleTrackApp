@@ -24,27 +24,34 @@ namespace ScaleTrackAPI.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<UserResponse>> GetById(int id)
         {
-            var user = await _service.GetById(id);
-            return user == null ? NotFound() : Ok(user);
+            var (user, error) = await _service.GetById(id);
+            if (error is not null) return NotFound(new { error.Message });
+            return Ok(user);
         }
+
+        [HttpPatch("{id:int}/role")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> UpdateRole(int id, [FromBody] int roleIndex)
+        {
+            var (error, message) = await _service.UpdateUserRole(id, roleIndex);
+
+            if (error != null)
+                return BadRequest(new { error.Message });
+
+            return Ok(new { Message = message });
+        }
+
 
         [HttpDelete("{id:int}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
-            var error = await _service.DeleteUser(id);
-            if (error != null) return NotFound(error);
-            return NoContent();
-        }
+            var (error, message) = await _service.DeleteUser(id);
 
-        [HttpPatch("{id:int}/role")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> UpdateRole(int id, [FromBody] string role)
-        {
-            var error = await _service.UpdateUserRole(id, role);
-            if (error != null) return BadRequest(error);
-            return NoContent();
+            if (error != null)
+                return BadRequest(new { error.Message });
+
+            return Ok(new { Message = message ?? string.Empty });
         }
     }
-
 }

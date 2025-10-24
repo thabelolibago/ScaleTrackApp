@@ -15,10 +15,6 @@ namespace ScaleTrackAPI.Controllers
         public async Task<IActionResult> GetMenu()
         {
             var menuItems = await _menuService.GetMenuForUserAsync(User);
-
-            if (!menuItems.Any())
-                return Unauthorized("No role assigned to this user.");
-
             return Ok(menuItems);
         }
     }

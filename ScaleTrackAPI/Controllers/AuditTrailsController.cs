@@ -15,15 +15,15 @@ namespace ScaleTrackAPI.Controllers
         [Authorize(Roles = "Admin,Developer")]
         public async Task<ActionResult<IEnumerable<AuditTrailResponse>>> GetAll()
         {
-            var list = await _service.GetAllAuditTrails();
-            return Ok(list);
+            var audits = await _service.GetAllAuditTrails();
+            return Ok(audits);
         }
 
         [HttpGet("{id:int}")]
         [Authorize(Roles = "Admin,Developer")]
         public async Task<ActionResult<AuditTrailResponse>> GetById(int id)
         {
-            var audit = await _service.GetById(id);
+            var (audit, _) = await _service.GetById(id);
             return audit == null ? NotFound() : Ok(audit);
         }
     }

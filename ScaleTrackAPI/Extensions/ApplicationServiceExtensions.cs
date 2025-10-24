@@ -8,6 +8,7 @@ using ScaleTrackAPI.Services;
 using ScaleTrackAPI.Services.Auth;
 using ScaleTrackAPI.Helpers;
 using System.Text;
+using System.Security.Claims;
 using ScaleTrackAPI.Validators;
 using ScaleTrackAPI.DTOs.Issue;
 using ScaleTrackAPI.DTOs.Comment;
@@ -22,7 +23,7 @@ namespace ScaleTrackAPI.Extensions
     {
         public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration config)
         {
-
+            // 1️⃣ Database setup
             var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION")
                                    ?? config.GetConnectionString("DefaultConnection")
                                    ?? "Data Source=Database/ScaleTrack.db";
@@ -30,6 +31,7 @@ namespace ScaleTrackAPI.Extensions
             services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlite(connectionString));
 
+            // 2️⃣ Identity setup
             services.AddIdentity<User, IdentityRole<int>>(options =>
             {
                 options.Password.RequireDigit = true;
@@ -41,9 +43,12 @@ namespace ScaleTrackAPI.Extensions
             .AddEntityFrameworkStores<AppDbContext>()
             .AddDefaultTokenProviders();
 
+            // 3️⃣ JWT setup
             var jwtKey = config["Jwt:Key"] ?? "ChangeThisSecretInConfig!";
             var jwtIssuer = config["Jwt:Issuer"] ?? "ScaleTrack";
             var jwtAudience = config["Jwt:Audience"] ?? "ScaleTrackClients";
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
 
             services.AddAuthentication(options =>
             {
@@ -56,16 +61,22 @@ namespace ScaleTrackAPI.Extensions
                 options.SaveToken = true;
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = key,
                     ValidateIssuer = true,
                     ValidateAudience = true,
                     ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true,
                     ValidIssuer = jwtIssuer,
                     ValidAudience = jwtAudience,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+                    ClockSkew = TimeSpan.Zero, // no delay on expiration
+
+                    // ✅ Tell ASP.NET which claim types to use for identity and roles
+                    NameClaimType = ClaimTypes.Email,
+                    RoleClaimType = ClaimTypes.Role
                 };
             });
 
+            // 4️⃣ Dependency Injection for Repositories
             services.AddScoped<IIssueRepository, IssueRepository>();
             services.AddScoped<ICommentRepository, CommentRepository>();
             services.AddScoped<IIssueTagRepository, IssueTagRepository>();
@@ -75,6 +86,7 @@ namespace ScaleTrackAPI.Extensions
             services.AddScoped<IMenuRepository, MenuRepository>();
             services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 
+            // 5️⃣ Validators
             services.AddSingleton<IValidator<IssueRequest>, IssueValidator>();
             services.AddSingleton<IValidator<CommentRequest>, CommentValidator>();
             services.AddSingleton<IValidator<IssueTagRequest>, IssueTagValidator>();
@@ -82,8 +94,10 @@ namespace ScaleTrackAPI.Extensions
             services.AddSingleton<IValidator<UserRequest>, UserValidator>();
             services.AddSingleton<IValidator<AuditTrailRequest>, AuditTrailValidator>();
 
+            // 6️⃣ Helpers
             services.AddSingleton<PasswordHelper>();
 
+            // 7️⃣ Services
             services.AddScoped<IssueService>();
             services.AddScoped<CommentService>();
             services.AddScoped<IssueTagService>();
