@@ -38,7 +38,7 @@ namespace ScaleTrackAPI.Services
             {
                 var issue = await _issueRepo.GetById(issueId);
                 if (issue == null)
-                    return (null, AppError.NotFound(ErrorMessages.Get("IssueNotFound", issueId)), null);
+                    return (null, AppError.NotFound(ErrorMessages.Get("Issue:IssueNotFound", issueId)), null);
 
                 var validation = _validator.Validate(request);
                 if (!validation.IsValid)
@@ -46,14 +46,14 @@ namespace ScaleTrackAPI.Services
 
                 var existing = await _repo.Get(issueId, request.TagId);
                 if (existing != null)
-                    return (null, AppError.Conflict(ErrorMessages.Get("TagAlreadyExists", request.TagId)), null);
+                    return (null, AppError.Conflict(ErrorMessages.Get("Tag:TagAlreadyExists", request.TagId)), null);
 
                 var issueTag = IssueTagMapper.ToModel(issueId, request);
                 var created = await _repo.Add(issueTag);
                 if (created == null)
-                    return (null, AppError.Unexpected(ErrorMessages.Get("UnexpectedError")), null);
+                    return (null, AppError.Unexpected(ErrorMessages.Get("General:UnexpectedError")), null);
 
-                var successMessage = SuccessMessages.Get("TagCreated");
+                var successMessage = SuccessMessages.Get("Tag:TagCreated");
                 return (IssueTagMapper.ToResponse(created), null, successMessage);
             });
         }
@@ -64,11 +64,11 @@ namespace ScaleTrackAPI.Services
             {
                 var issueTag = await _repo.Get(issueId, tagId);
                 if (issueTag == null)
-                    return (AppError.NotFound(ErrorMessages.Get("TagNotFound", tagId)), null);
+                    return (AppError.NotFound(ErrorMessages.Get("Tag:TagNotFound", tagId)), null);
 
                 await _repo.Delete(issueTag);
 
-                var successMessage = SuccessMessages.Get("TagDeleted");
+                var successMessage = SuccessMessages.Get("Tag:TagDeleted");
                 return (null, successMessage);
             });
         }

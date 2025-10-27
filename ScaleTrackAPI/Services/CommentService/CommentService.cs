@@ -36,7 +36,7 @@ namespace ScaleTrackAPI.Services
         {
             var comment = await _repo.GetById(issueId, id);
             if (comment == null)
-                return (null, AppError.NotFound(ErrorMessages.Get("CommentNotFound", id)));
+                return (null, AppError.NotFound(ErrorMessages.Get("Comment:CommentNotFound", id)));
 
             return (CommentMapper.ToResponse(comment), null);
         }
@@ -47,7 +47,7 @@ namespace ScaleTrackAPI.Services
             {
                 var issue = await _issueRepo.GetById(issueId);
                 if (issue == null)
-                    return (null, AppError.NotFound(ErrorMessages.Get("IssueForCommentNotFound", issueId)));
+                    return (null, AppError.NotFound(ErrorMessages.Get("Comment:IssueForCommentNotFound", issueId)));
 
                 var validation = _validator.Validate(request);
                 if (!validation.IsValid)
@@ -57,7 +57,7 @@ namespace ScaleTrackAPI.Services
                 var created = await _repo.Add(comment);
 
                 if (created == null)
-                    return (null, AppError.Unexpected(ErrorMessages.Get("UnexpectedError")));
+                    return (null, AppError.Unexpected(ErrorMessages.Get("General:UnexpectedError")));
 
                 return (CommentMapper.ToResponse(created), null);
             });
@@ -69,13 +69,11 @@ namespace ScaleTrackAPI.Services
             {
                 var comment = await _repo.GetById(issueId, id);
                 if (comment == null)
-                    return (AppError.NotFound(ErrorMessages.Get("CommentNotFound", id)), null);
+                    return (AppError.NotFound(ErrorMessages.Get("Comment:CommentNotFound", id)), null);
 
                 await _repo.Delete(comment);
 
-                // Future: add audit log or side effects here if needed
-
-                return (null, SuccessMessages.Get("CommentDeleted"));
+                return (null, SuccessMessages.Get("Comment:CommentDeleted"));
             });
         }
     }

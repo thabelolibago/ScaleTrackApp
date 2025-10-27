@@ -8,10 +8,7 @@ namespace ScaleTrackAPI.Mappers
     {
         public static UserResponse ToResponse(User user)
         {
-            var role = Enum.TryParse<UserRole>(user.Role, out var parsedRole)
-                       ? parsedRole
-                       : UserRole.Viewer;
-
+            var role = user.Role; 
             return new UserResponse
             {
                 Id = user.Id,
@@ -30,7 +27,7 @@ namespace ScaleTrackAPI.Mappers
                 LastName = request.LastName,
                 Email = request.Email,
                 UserName = request.Email,
-                Role = request.Role.ToString() 
+                Role = request.Role
             };
         }
 
@@ -41,7 +38,7 @@ namespace ScaleTrackAPI.Mappers
                 FirstName = request.FirstName,
                 LastName = request.LastName,
                 Email = request.Email,
-                Role = UserRole.Viewer 
+                Role = UserRole.Viewer
             };
         }
     }

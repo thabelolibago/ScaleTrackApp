@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Configuration;
+using System;
 
 namespace ScaleTrackAPI.Errors
 {
@@ -15,7 +16,7 @@ namespace ScaleTrackAPI.Errors
         /// </summary>
         public static void Init(IConfiguration configuration)
         {
-            _configuration = configuration;
+            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         }
 
         /// <summary>
@@ -24,9 +25,14 @@ namespace ScaleTrackAPI.Errors
         /// </summary>
         public static string Get(string key)
         {
-            var message = _configuration?[$"ErrorMessages:{key}"];
+            if (_configuration == null)
+                throw new InvalidOperationException("ErrorMessages is not initialized. Call Init() during startup.");
+
+            var message = _configuration[$"ErrorMessages:{key}"];
+
             if (string.IsNullOrEmpty(message))
                 throw new Exception($"Missing error message for key '{key}' in configuration.");
+
             return message;
         }
 

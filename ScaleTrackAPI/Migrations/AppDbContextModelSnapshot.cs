@@ -151,6 +151,7 @@ namespace ScaleTrackAPI.Migrations
 
                     b.Property<string>("Action")
                         .IsRequired()
+                        .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("ApprovedAt")
@@ -163,10 +164,12 @@ namespace ScaleTrackAPI.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<int>("ChangedBy")
+                        .HasMaxLength(100)
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Changes")
                         .IsRequired()
+                        .HasMaxLength(1000)
                         .HasColumnType("TEXT");
 
                     b.Property<int>("EntityId")
@@ -174,6 +177,7 @@ namespace ScaleTrackAPI.Migrations
 
                     b.Property<string>("EntityName")
                         .IsRequired()
+                        .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -193,6 +197,7 @@ namespace ScaleTrackAPI.Migrations
 
                     b.Property<string>("Content")
                         .IsRequired()
+                        .HasMaxLength(1000)
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
@@ -224,6 +229,7 @@ namespace ScaleTrackAPI.Migrations
 
                     b.Property<string>("Description")
                         .IsRequired()
+                        .HasMaxLength(2000)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Priority")
@@ -236,6 +242,7 @@ namespace ScaleTrackAPI.Migrations
 
                     b.Property<string>("Title")
                         .IsRequired()
+                        .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Type")
@@ -253,10 +260,12 @@ namespace ScaleTrackAPI.Migrations
             modelBuilder.Entity("ScaleTrackAPI.Models.IssueTag", b =>
                 {
                     b.Property<int>("IssueId")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("INTEGER")
+                        .HasColumnOrder(0);
 
                     b.Property<int>("TagId")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("INTEGER")
+                        .HasColumnOrder(1);
 
                     b.HasKey("IssueId", "TagId");
 
@@ -273,14 +282,17 @@ namespace ScaleTrackAPI.Migrations
 
                     b.Property<string>("Icon")
                         .IsRequired()
+                        .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .IsRequired()
+                        .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Path")
                         .IsRequired()
+                        .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Roles")
@@ -329,6 +341,7 @@ namespace ScaleTrackAPI.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
+                        .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");

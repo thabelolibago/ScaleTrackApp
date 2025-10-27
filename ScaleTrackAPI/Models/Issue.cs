@@ -1,15 +1,31 @@
+using System.ComponentModel.DataAnnotations;
 using ScaleTrackAPI.DTOs.Issue;
 
 namespace ScaleTrackAPI.Models
 {
     public class Issue
     {
+        [Key]
         public int Id { get; set; }
+
+        [Required]
+        [StringLength(200)]
         public string Title { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(2000)]
         public string Description { get; set; } = string.Empty;
-        public IssueType Type { get; set; } = IssueType.Bug; 
-        public IssuePriority Priority { get; set; } = IssuePriority.Medium;
+
+        [Required]
+        public IssueType Type { get; set; }
+
+        [Required]
+        public IssuePriority Priority { get; set; }
+
+        [Required]
         public IssueStatus Status { get; set; } = IssueStatus.Open;
+
+        [Required]
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
 

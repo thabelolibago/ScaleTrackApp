@@ -29,8 +29,15 @@ packages/
 **/Migrations/**
 Migrations/
 
+# Ignore Documentation folder
+Documentation/
+
+# Ignore .vs folder
+.vs/ 
+.vscode/
+
 # Ignore database folder
-Database/
+Database/ScaleTrackDB.db
 
 # Ignore app settings files
 appsettings.Development.json
