@@ -9,19 +9,30 @@ using ScaleTrackAPI.Mappers;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using ScaleTrackAPI.Database;
 
 namespace ScaleTrackAPI.Services.Auth
 {
-    public class AuthService(
-        UserManager<User> userManager,
-        SignInManager<User> signInManager,
-        IConfiguration config,
-        IRefreshTokenRepository refreshTokenRepo) : IAuthService
+    public class AuthService : TransactionalServiceBase, IAuthService
     {
-        private readonly UserManager<User> _userManager = userManager;
-        private readonly SignInManager<User> _signInManager = signInManager;
-        private readonly IConfiguration _config = config;
-        private readonly IRefreshTokenRepository _refreshTokenRepo = refreshTokenRepo;
+        private readonly UserManager<User> _userManager;
+        private readonly SignInManager<User> _signInManager;
+        private readonly IConfiguration _config;
+        private readonly IRefreshTokenRepository _refreshTokenRepo;
+
+        public AuthService(
+            AppDbContext context,
+            UserManager<User> userManager,
+            SignInManager<User> signInManager,
+            IConfiguration config,
+            IRefreshTokenRepository refreshTokenRepo
+        ) : base(context)
+        {
+            _userManager = userManager;
+            _signInManager = signInManager;
+            _config = config;
+            _refreshTokenRepo = refreshTokenRepo;
+        }
 
         public async Task<(LoginResponse? Entity, AppError? Error)> LoginAsync(LoginRequest request)
         {
@@ -51,7 +62,6 @@ namespace ScaleTrackAPI.Services.Auth
                     Role = Enum.TryParse<UserRole>(user.Role, out var parsedRole)
                            ? parsedRole
                            : UserRole.Viewer
-
                 }
             };
 
@@ -60,44 +70,47 @@ namespace ScaleTrackAPI.Services.Auth
 
         public async Task<(LoginResponse? Entity, AppError? Error)> RefreshTokenAsync(RefreshTokenRequest request)
         {
-            var storedToken = await _refreshTokenRepo.GetByTokenAsync(request.RefreshToken);
-
-            if (storedToken == null)
-                return (null, AppError.Unauthorized(ErrorMessages.Get("InvalidToken")));
-
-            if (storedToken.IsRevoked || storedToken.IsUsed || storedToken.Expires < DateTime.UtcNow)
-                return (null, AppError.Unauthorized(ErrorMessages.Get("TokenExpired")));
-
-            // mark used
-            storedToken.IsUsed = true;
-            await _refreshTokenRepo.UpdateAsync(storedToken);
-            await _refreshTokenRepo.SaveChangesAsync();
-
-            var user = storedToken.User;
-            if (user == null)
-                return (null, AppError.Unauthorized(ErrorMessages.Get("InvalidToken")));
-
-            var (newAccessToken, newRefreshToken) = await GenerateTokensAsync(user);
-
-            var response = new LoginResponse
+            return await ExecuteInTransactionAsync<(LoginResponse? Entity, AppError? Error)>(async () =>
             {
-                Token = newAccessToken,
-                RefreshToken = newRefreshToken,
-                User = new UserResponse
+                var storedToken = await _refreshTokenRepo.GetByTokenAsync(request.RefreshToken);
+
+                if (storedToken == null)
+                    return (null, AppError.Unauthorized(ErrorMessages.Get("InvalidToken")));
+
+                if (storedToken.IsRevoked || storedToken.IsUsed || storedToken.Expires < DateTime.UtcNow)
+                    return (null, AppError.Unauthorized(ErrorMessages.Get("TokenExpired")));
+
+                // mark used
+                storedToken.IsUsed = true;
+                await _refreshTokenRepo.UpdateAsync(storedToken);
+
+                var user = storedToken.User;
+                if (user == null)
+                    return (null, AppError.Unauthorized(ErrorMessages.Get("InvalidToken")));
+
+                // generate new tokens
+                var (newAccessToken, newRefreshToken) = await GenerateTokensAsync(user);
+
+                var response = new LoginResponse
                 {
-                    Id = user.Id,
-                    FirstName = user.FirstName,
-                    LastName = user.LastName,
-                    Email = user.Email ?? "",
-                    Role = Enum.TryParse<UserRole>(user.Role, out var parsedRole)
-                            ? parsedRole
-                            : UserRole.Viewer
+                    Token = newAccessToken,
+                    RefreshToken = newRefreshToken,
+                    User = new UserResponse
+                    {
+                        Id = user.Id,
+                        FirstName = user.FirstName,
+                        LastName = user.LastName,
+                        Email = user.Email ?? "",
+                        Role = Enum.TryParse<UserRole>(user.Role, out var parsedRole)
+                               ? parsedRole
+                               : UserRole.Viewer
+                    }
+                };
 
-                }
-            };
-
-            return (response, null);
+                return (response, null);
+            });
         }
+
 
         public async Task<AppError?> LogoutAsync(LogoutRequest request)
         {
@@ -117,13 +130,13 @@ namespace ScaleTrackAPI.Services.Auth
             var minutes = int.TryParse(_config["Jwt:AccessTokenMinutes"], out var m) ? m : 60;
 
             var claims = new List<Claim>
-    {
-        new Claim(JwtRegisteredClaimNames.Sub, user.Email ?? user.Id.ToString()),
-        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-        new Claim(ClaimTypes.Email, user.Email ?? ""),
-        new Claim(ClaimTypes.Role, user.Role)
-    };
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, user.Email ?? user.Id.ToString()),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Email, user.Email ?? ""),
+                new Claim(ClaimTypes.Role, user.Role)
+            };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

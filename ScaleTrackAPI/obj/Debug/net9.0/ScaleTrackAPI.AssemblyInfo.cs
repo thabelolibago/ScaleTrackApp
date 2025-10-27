@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ScaleTrackAPI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c9bab1c51ebe6edfa9055f67bdb3296040cd07fe")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f22ca49ff6a7b078bc1e469a97bd6d25ab012d0d")]
 [assembly: System.Reflection.AssemblyProductAttribute("ScaleTrackAPI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ScaleTrackAPI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

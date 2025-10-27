@@ -3,15 +3,20 @@ using ScaleTrackAPI.Errors;
 using ScaleTrackAPI.Repositories;
 using ScaleTrackAPI.Mappers;
 using ScaleTrackAPI.Helpers;
+using ScaleTrackAPI.Database;
 
 namespace ScaleTrackAPI.Services
 {
-    public class AuditTrailService
+    public class AuditTrailService : TransactionalServiceBase
     {
         private readonly IAuditTrailRepository _repo;
         private readonly IValidator<AuditTrailRequest> _validator;
 
-        public AuditTrailService(IAuditTrailRepository repo, IValidator<AuditTrailRequest> validator)
+        public AuditTrailService(
+            AppDbContext context,
+            IAuditTrailRepository repo,
+            IValidator<AuditTrailRequest> validator
+        ) : base(context)
         {
             _repo = repo;
             _validator = validator;
@@ -34,46 +39,55 @@ namespace ScaleTrackAPI.Services
 
         public async Task<(AuditTrailResponse? Entity, AppError? Error)> CreateAuditTrail(AuditTrailRequest request)
         {
-            var validation = _validator.Validate(request);
-            if (!validation.IsValid)
+            return await ExecuteInTransactionAsync<(AuditTrailResponse? Entity, AppError? Error)>(async () =>
             {
-                var message = string.Join("; ", validation.Errors);
-                return (null, AppError.Validation(message));
-            }
+                var validation = _validator.Validate(request);
+                if (!validation.IsValid)
+                {
+                    var message = string.Join("; ", validation.Errors);
+                    return (null, AppError.Validation(message));
+                }
 
-            var audit = AuditTrailMapper.ToModel(request);
-            var created = await _repo.Add(audit);
+                var audit = AuditTrailMapper.ToModel(request);
+                var created = await _repo.Add(audit);
 
-            if (created == null)
-                return (null, AppError.Unexpected(ErrorMessages.Get("AuditCreationFailed")));
+                if (created == null)
+                    return (null, AppError.Unexpected(ErrorMessages.Get("AuditCreationFailed")));
 
-            return (AuditTrailMapper.ToResponse(created), null);
+                return (AuditTrailMapper.ToResponse(created), null);
+            });
         }
 
         public async Task<(AuditTrailResponse? Entity, AppError? Error)> ApproveAuditTrail(int id, int approverId)
         {
-            var audit = await _repo.GetById(id);
-            if (audit == null)
-                return (null, AppError.NotFound(ErrorMessages.Get("AuditNotFound", id)));
+            return await ExecuteInTransactionAsync<(AuditTrailResponse? Entity, AppError? Error)>(async () =>
+            {
+                var audit = await _repo.GetById(id);
+                if (audit == null)
+                    return (null, AppError.NotFound(ErrorMessages.Get("AuditNotFound", id)));
 
-            audit.ApprovedBy = approverId;
-            audit.ApprovedAt = DateTime.UtcNow;
+                audit.ApprovedBy = approverId;
+                audit.ApprovedAt = DateTime.UtcNow;
 
-            var updated = await _repo.Update(audit);
-            if (updated == null)
-                return (null, AppError.Unexpected(ErrorMessages.Get("AuditApprovalFailed")));
+                var updated = await _repo.Update(audit);
+                if (updated == null)
+                    return (null, AppError.Unexpected(ErrorMessages.Get("AuditApprovalFailed")));
 
-            return (AuditTrailMapper.ToResponse(updated), null);
+                return (AuditTrailMapper.ToResponse(updated), null);
+            });
         }
 
         public async Task<AppError?> DeleteAuditTrail(int id)
         {
-            var audit = await _repo.GetById(id);
-            if (audit == null)
-                return AppError.NotFound(ErrorMessages.Get("AuditNotFound", id));
+            return await ExecuteInTransactionAsync<AppError?>(async () =>
+            {
+                var audit = await _repo.GetById(id);
+                if (audit == null)
+                    return AppError.NotFound(ErrorMessages.Get("AuditNotFound", id));
 
-            await _repo.Delete(audit);
-            return null;
+                await _repo.Delete(audit);
+                return null;
+            });
         }
     }
 }
