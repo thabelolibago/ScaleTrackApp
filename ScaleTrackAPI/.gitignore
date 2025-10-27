@@ -13,6 +13,8 @@
 *.sln.docstates
 
 # Ignore build outputs
+ScaleTrackAPI/bin/
+ScaleTrackAPI/obj/
 bin/
 obj/
 
@@ -38,6 +40,9 @@ Documentation/
 
 # Ignore database folder
 Database/ScaleTrackDB.db
+
+# Ignore ScaleTrack.db file
+ScaleTrack.db
 
 # Ignore app settings files
 appsettings.Development.json
