@@ -4,13 +4,24 @@ using ScaleTrackAPI.Mappers;
 using ScaleTrackAPI.Helpers;
 using ScaleTrackAPI.Errors;
 using ScaleTrackAPI.Messages;
+using ScaleTrackAPI.Database;
 
 namespace ScaleTrackAPI.Services
 {
-    public class IssueService(IIssueRepository repo, IValidator<IssueRequest> validator)
+    public class IssueService : TransactionalServiceBase
     {
-        private readonly IIssueRepository _repo = repo;
-        private readonly IValidator<IssueRequest> _validator = validator;
+        private readonly IIssueRepository _repo;
+        private readonly IValidator<IssueRequest> _validator;
+
+        public IssueService(
+            AppDbContext context,
+            IIssueRepository repo,
+            IValidator<IssueRequest> validator
+        ) : base(context)
+        {
+            _repo = repo;
+            _validator = validator;
+        }
 
         public async Task<List<IssueResponse>> GetAllIssues()
         {
@@ -29,76 +40,85 @@ namespace ScaleTrackAPI.Services
 
         public async Task<(IssueResponse? Response, AppError? Error)> CreateIssue(IssueRequest request)
         {
-            var validation = _validator.Validate(request);
-            if (!validation.IsValid)
-                return (null, AppError.Validation(string.Join("; ", validation.Errors)));
+            return await ExecuteInTransactionAsync<(IssueResponse? Response, AppError? Error)>(async () =>
+            {
+                var validation = _validator.Validate(request);
+                if (!validation.IsValid)
+                    return (null, AppError.Validation(string.Join("; ", validation.Errors)));
 
-            var issue = IssueMapper.ToModel(request);
-            var created = await _repo.AddIssue(issue);
-            if (created == null)
-                return (null, AppError.Unexpected(ErrorMessages.Get("UnexpectedError")));
+                var issue = IssueMapper.ToModel(request);
+                var created = await _repo.AddIssue(issue);
+                if (created == null)
+                    return (null, AppError.Unexpected(ErrorMessages.Get("UnexpectedError")));
 
-            return (IssueMapper.ToResponse(created), null);
+                return (IssueMapper.ToResponse(created), null);
+            });
         }
 
         public async Task<(IssueResponse? Response, AppError? Error)> UpdateIssue(int id, IssueRequest request)
         {
-            var validation = _validator.Validate(request);
-            if (!validation.IsValid)
-                return (null, AppError.Validation(string.Join("; ", validation.Errors)));
+            return await ExecuteInTransactionAsync<(IssueResponse? Response, AppError? Error)>(async () =>
+            {
+                var validation = _validator.Validate(request);
+                if (!validation.IsValid)
+                    return (null, AppError.Validation(string.Join("; ", validation.Errors)));
 
-            var issue = await _repo.GetById(id);
-            if (issue == null)
-                return (null, AppError.NotFound(ErrorMessages.Get("IssueNotFound", id)));
+                var issue = await _repo.GetById(id);
+                if (issue == null)
+                    return (null, AppError.NotFound(ErrorMessages.Get("IssueNotFound", id)));
 
-            issue.Title = request.Title;
-            issue.Description = request.Description;
-            issue.Type = request.Type;
-            issue.Priority = request.Priority;
-            issue.UpdatedAt = DateTime.UtcNow;
+                issue.Title = request.Title;
+                issue.Description = request.Description;
+                issue.Type = request.Type;
+                issue.Priority = request.Priority;
+                issue.UpdatedAt = DateTime.UtcNow;
 
-            var updated = await _repo.UpdateIssue(issue);
-            if (updated == null)
-                return (null, AppError.Unexpected(ErrorMessages.Get("UnexpectedError")));
+                var updated = await _repo.UpdateIssue(issue);
+                if (updated == null)
+                    return (null, AppError.Unexpected(ErrorMessages.Get("UnexpectedError")));
 
-            return (IssueMapper.ToResponse(updated), null);
+                return (IssueMapper.ToResponse(updated), null);
+            });
         }
 
         public async Task<(IssueResponse? Response, AppError? Error, string? Message)> UpdateIssueStatus(int id, int statusIndex)
         {
-
-            if (!Enum.IsDefined(typeof(IssueStatus), statusIndex))
+            return await ExecuteInTransactionAsync<(IssueResponse? Response, AppError? Error, string? Message)>(async () =>
             {
-                return (null, AppError.Validation(ErrorMessages.Get("InvalidIssueStatus", statusIndex)), null);
-            }
+                if (!Enum.IsDefined(typeof(IssueStatus), statusIndex))
+                {
+                    return (null, AppError.Validation(ErrorMessages.Get("InvalidIssueStatus", statusIndex)), null);
+                }
 
-            var status = (IssueStatus)statusIndex;
+                var status = (IssueStatus)statusIndex;
 
-            var issue = await _repo.GetById(id);
-            if (issue == null)
-                return (null, AppError.NotFound(ErrorMessages.Get("IssueNotFound", id)), null);
+                var issue = await _repo.GetById(id);
+                if (issue == null)
+                    return (null, AppError.NotFound(ErrorMessages.Get("IssueNotFound", id)), null);
 
-            issue.Status = status;
-            issue.UpdatedAt = DateTime.UtcNow;
+                issue.Status = status;
+                issue.UpdatedAt = DateTime.UtcNow;
 
-            var updated = await _repo.UpdateIssue(issue);
-            if (updated == null)
-                return (null, AppError.Unexpected(ErrorMessages.Get("UnexpectedError")), null);
+                var updated = await _repo.UpdateIssue(issue);
+                if (updated == null)
+                    return (null, AppError.Unexpected(ErrorMessages.Get("UnexpectedError")), null);
 
-            var successMessage = SuccessMessages.Get("IssueUpdated");
-
-            return (IssueMapper.ToResponse(updated), null, successMessage);
+                var successMessage = SuccessMessages.Get("IssueUpdated");
+                return (IssueMapper.ToResponse(updated), null, successMessage);
+            });
         }
-
 
         public async Task<(AppError? Error, string Message)> DeleteIssue(int id)
         {
-            var issue = await _repo.GetById(id);
-            if (issue == null)
-                return (AppError.NotFound(ErrorMessages.Get("IssueNotFound", id)), null);
+            return await ExecuteInTransactionAsync<(AppError? Error, string Message)>(async () =>
+            {
+                var issue = await _repo.GetById(id);
+                if (issue == null)
+                    return (AppError.NotFound(ErrorMessages.Get("IssueNotFound", id)), null);
 
-            await _repo.DeleteIssue(id);
-            return (null, SuccessMessages.Get("IssueDeleted"));
+                await _repo.DeleteIssue(id);
+                return (null, SuccessMessages.Get("IssueDeleted"));
+            });
         }
     }
 }

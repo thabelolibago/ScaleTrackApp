@@ -4,13 +4,24 @@ using ScaleTrackAPI.Mappers;
 using ScaleTrackAPI.Errors;
 using ScaleTrackAPI.Helpers;
 using ScaleTrackAPI.Messages;
+using ScaleTrackAPI.Database;
 
 namespace ScaleTrackAPI.Services
 {
-    public class TagService(ITagRepository repo, IValidator<TagRequest> validator)
+    public class TagService : TransactionalServiceBase
     {
-        private readonly ITagRepository _repo = repo;
-        private readonly IValidator<TagRequest> _validator = validator;
+        private readonly ITagRepository _repo;
+        private readonly IValidator<TagRequest> _validator;
+
+        public TagService(
+            AppDbContext context,
+            ITagRepository repo,
+            IValidator<TagRequest> validator
+        ) : base(context)
+        {
+            _repo = repo;
+            _validator = validator;
+        }
 
         public async Task<List<TagResponse>> GetAllTags()
         {
@@ -29,38 +40,44 @@ namespace ScaleTrackAPI.Services
 
         public async Task<(TagResponse? Response, AppError? Error, string? Message)> CreateTag(TagRequest request)
         {
-            var validation = _validator.Validate(request);
-            if (!validation.IsValid)
+            return await ExecuteInTransactionAsync<(TagResponse? Response, AppError? Error, string? Message)>(async () =>
             {
-                var message = validation.Errors.Count > 0
-                              ? string.Join("; ", validation.Errors)
-                              : ErrorMessages.Get("ValidationFailed");
-                return (null, AppError.Validation(message), null);
-            }
+                var validation = _validator.Validate(request);
+                if (!validation.IsValid)
+                {
+                    var message = validation.Errors.Count > 0
+                                  ? string.Join("; ", validation.Errors)
+                                  : ErrorMessages.Get("ValidationFailed");
+                    return (null, AppError.Validation(message), null);
+                }
 
-            if (await _repo.ExistsByName(request.Name))
-                return (null, AppError.Conflict(ErrorMessages.Get("TagAlreadyExists", request.Name)), null);
+                if (await _repo.ExistsByName(request.Name))
+                    return (null, AppError.Conflict(ErrorMessages.Get("TagAlreadyExists", request.Name)), null);
 
-            var tag = TagMapper.ToModel(request);
-            var created = await _repo.Add(tag);
+                var tag = TagMapper.ToModel(request);
+                var created = await _repo.Add(tag);
 
-            if (created == null)
-                return (null, AppError.Unexpected(ErrorMessages.Get("UnexpectedError")), null);
+                if (created == null)
+                    return (null, AppError.Unexpected(ErrorMessages.Get("UnexpectedError")), null);
 
-            var successMessage = SuccessMessages.Get("TagCreated");
-            return (TagMapper.ToResponse(created), null, successMessage);
+                var successMessage = SuccessMessages.Get("TagCreated");
+                return (TagMapper.ToResponse(created), null, successMessage);
+            });
         }
 
         public async Task<(AppError? Error, string? Message)> DeleteTag(int id)
         {
-            var tag = await _repo.GetById(id);
-            if (tag == null)
-                return (AppError.NotFound(ErrorMessages.Get("TagNotFound", id)), null);
+            return await ExecuteInTransactionAsync<(AppError? Error, string? Message)>(async () =>
+            {
+                var tag = await _repo.GetById(id);
+                if (tag == null)
+                    return (AppError.NotFound(ErrorMessages.Get("TagNotFound", id)), null);
 
-            await _repo.Delete(tag);
+                await _repo.Delete(tag);
 
-            var successMessage = SuccessMessages.Get("TagDeleted");
-            return (null, successMessage);
+                var successMessage = SuccessMessages.Get("TagDeleted");
+                return (null, successMessage);
+            });
         }
     }
 }

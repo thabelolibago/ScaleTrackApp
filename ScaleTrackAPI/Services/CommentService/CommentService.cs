@@ -4,14 +4,27 @@ using ScaleTrackAPI.Mappers;
 using ScaleTrackAPI.Errors;
 using ScaleTrackAPI.Helpers;
 using ScaleTrackAPI.Messages;
+using ScaleTrackAPI.Database;
 
 namespace ScaleTrackAPI.Services
 {
-    public class CommentService(ICommentRepository repo, IIssueRepository issueRepo, IValidator<CommentRequest> validator)
+    public class CommentService : TransactionalServiceBase
     {
-        private readonly ICommentRepository _repo = repo;
-        private readonly IIssueRepository _issueRepo = issueRepo;
-        private readonly IValidator<CommentRequest> _validator = validator;
+        private readonly ICommentRepository _repo;
+        private readonly IIssueRepository _issueRepo;
+        private readonly IValidator<CommentRequest> _validator;
+
+        public CommentService(
+            AppDbContext context,
+            ICommentRepository repo,
+            IIssueRepository issueRepo,
+            IValidator<CommentRequest> validator
+        ) : base(context)
+        {
+            _repo = repo;
+            _issueRepo = issueRepo;
+            _validator = validator;
+        }
 
         public async Task<List<CommentResponse>> GetCommentsByIssueIdAsync(int issueId)
         {
@@ -30,31 +43,40 @@ namespace ScaleTrackAPI.Services
 
         public async Task<(CommentResponse? Response, AppError? Error)> AddCommentAsync(int issueId, CommentRequest request)
         {
-            var issue = await _issueRepo.GetById(issueId);
-            if (issue == null)
-                return (null, AppError.NotFound(ErrorMessages.Get("IssueForCommentNotFound", issueId)));
+            return await ExecuteInTransactionAsync<(CommentResponse? Response, AppError? Error)>(async () =>
+            {
+                var issue = await _issueRepo.GetById(issueId);
+                if (issue == null)
+                    return (null, AppError.NotFound(ErrorMessages.Get("IssueForCommentNotFound", issueId)));
 
-            var validation = _validator.Validate(request);
-            if (!validation.IsValid)
-                return (null, AppError.Validation(string.Join("; ", validation.Errors)));
+                var validation = _validator.Validate(request);
+                if (!validation.IsValid)
+                    return (null, AppError.Validation(string.Join("; ", validation.Errors)));
 
-            var comment = CommentMapper.ToModel(issueId, request);
-            var created = await _repo.Add(comment);
+                var comment = CommentMapper.ToModel(issueId, request);
+                var created = await _repo.Add(comment);
 
-            if (created == null)
-                return (null, AppError.Unexpected(ErrorMessages.Get("UnexpectedError")));
+                if (created == null)
+                    return (null, AppError.Unexpected(ErrorMessages.Get("UnexpectedError")));
 
-            return (CommentMapper.ToResponse(created), null);
+                return (CommentMapper.ToResponse(created), null);
+            });
         }
 
         public async Task<(AppError? Error, string? Message)> DeleteCommentAsync(int issueId, int id)
         {
-            var comment = await _repo.GetById(issueId, id);
-            if (comment == null)
-                return (AppError.NotFound(ErrorMessages.Get("CommentNotFound", id)), null);
+            return await ExecuteInTransactionAsync<(AppError? Error, string? Message)>(async () =>
+            {
+                var comment = await _repo.GetById(issueId, id);
+                if (comment == null)
+                    return (AppError.NotFound(ErrorMessages.Get("CommentNotFound", id)), null);
 
-            await _repo.Delete(comment);
-            return (null, SuccessMessages.Get("CommentDeleted"));
+                await _repo.Delete(comment);
+
+                // Future: add audit log or side effects here if needed
+
+                return (null, SuccessMessages.Get("CommentDeleted"));
+            });
         }
     }
 }

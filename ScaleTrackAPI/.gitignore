@@ -1,0 +1,69 @@
+################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+# Ignore environment files
+.env
+
+# Ignore Visual Studio specific files
+.vs/
+*.suo
+*.user
+*.userprefs
+*.sln.docstates
+
+# Ignore build outputs
+bin/
+obj/
+
+# Ignore package directories
+packages/
+*.nupkg
+
+# Ignore database files
+*.db
+*.db-shm
+*.db-wal
+
+# Ignore migrations
+**/Migrations/**
+Migrations/
+
+# Ignore database folder
+Database/
+
+# Ignore app settings files
+appsettings.Development.json
+.idea
+
+# Ignore IDE specific files
+.idea/
+
+# Ignore log files
+*.log
+
+# Ignore temporary files
+*.tmp
+*.temp
+
+# Ignore backup files
+*~
+*.bak
+
+# Ignore local configuration files
+*.local
+
+# Ignore any other files that are not needed in source control
+*.zip
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+*.dll
+*.exe
+*.pdb
+*.mdb
+*.config
+
+# Ignore GitHub specific files
+.github/

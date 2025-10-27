@@ -2,6 +2,7 @@ namespace ScaleTrackAPI.DTOs.AuditTrail
 {
     public class AuditTrailDto
     {
+        
         public int Id { get; set; }
         public string EntityName { get; set; } = null!;
         public int EntityId { get; set; }
