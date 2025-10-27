@@ -33,7 +33,7 @@ namespace ScaleTrackAPI.Services
         {
             var issue = await _repo.GetById(id);
             if (issue == null)
-                return (null, AppError.NotFound(ErrorMessages.Get("IssueNotFound", id)));
+                return (null, AppError.NotFound(ErrorMessages.Get("Issue:IssueNotFound", id)));
 
             return (IssueMapper.ToResponse(issue), null);
         }
@@ -49,7 +49,7 @@ namespace ScaleTrackAPI.Services
                 var issue = IssueMapper.ToModel(request);
                 var created = await _repo.AddIssue(issue);
                 if (created == null)
-                    return (null, AppError.Unexpected(ErrorMessages.Get("UnexpectedError")));
+                    return (null, AppError.Unexpected(ErrorMessages.Get("General:UnexpectedError")));
 
                 return (IssueMapper.ToResponse(created), null);
             });
@@ -65,7 +65,7 @@ namespace ScaleTrackAPI.Services
 
                 var issue = await _repo.GetById(id);
                 if (issue == null)
-                    return (null, AppError.NotFound(ErrorMessages.Get("IssueNotFound", id)));
+                    return (null, AppError.NotFound(ErrorMessages.Get("Issue:IssueNotFound", id)));
 
                 issue.Title = request.Title;
                 issue.Description = request.Description;
@@ -75,7 +75,7 @@ namespace ScaleTrackAPI.Services
 
                 var updated = await _repo.UpdateIssue(issue);
                 if (updated == null)
-                    return (null, AppError.Unexpected(ErrorMessages.Get("UnexpectedError")));
+                    return (null, AppError.Unexpected(ErrorMessages.Get("General:UnexpectedError")));
 
                 return (IssueMapper.ToResponse(updated), null);
             });
@@ -87,23 +87,23 @@ namespace ScaleTrackAPI.Services
             {
                 if (!Enum.IsDefined(typeof(IssueStatus), statusIndex))
                 {
-                    return (null, AppError.Validation(ErrorMessages.Get("InvalidIssueStatus", statusIndex)), null);
+                    return (null, AppError.Validation(ErrorMessages.Get("Issue:InvalidIssueStatus", statusIndex)), null);
                 }
 
                 var status = (IssueStatus)statusIndex;
 
                 var issue = await _repo.GetById(id);
                 if (issue == null)
-                    return (null, AppError.NotFound(ErrorMessages.Get("IssueNotFound", id)), null);
+                    return (null, AppError.NotFound(ErrorMessages.Get("Issue:IssueNotFound", id)), null);
 
                 issue.Status = status;
                 issue.UpdatedAt = DateTime.UtcNow;
 
                 var updated = await _repo.UpdateIssue(issue);
                 if (updated == null)
-                    return (null, AppError.Unexpected(ErrorMessages.Get("UnexpectedError")), null);
+                    return (null, AppError.Unexpected(ErrorMessages.Get("General:UnexpectedError")), null);
 
-                var successMessage = SuccessMessages.Get("IssueUpdated");
+                var successMessage = SuccessMessages.Get("Issue:IssueUpdated");
                 return (IssueMapper.ToResponse(updated), null, successMessage);
             });
         }
@@ -114,10 +114,10 @@ namespace ScaleTrackAPI.Services
             {
                 var issue = await _repo.GetById(id);
                 if (issue == null)
-                    return (AppError.NotFound(ErrorMessages.Get("IssueNotFound", id)), null);
+                    return (AppError.NotFound(ErrorMessages.Get("Issue:IssueNotFound", id)), null);
 
                 await _repo.DeleteIssue(id);
-                return (null, SuccessMessages.Get("IssueDeleted"));
+                return (null, SuccessMessages.Get("Issue:IssueDeleted"));
             });
         }
     }

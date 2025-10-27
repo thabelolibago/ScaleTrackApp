@@ -32,7 +32,7 @@ namespace ScaleTrackAPI.Services
         {
             var audit = await _repo.GetById(id);
             if (audit == null)
-                return (null, AppError.NotFound(ErrorMessages.Get("AuditNotFound", id)));
+                return (null, AppError.NotFound(ErrorMessages.Get("Audit:AuditNotFound", id)));
 
             return (AuditTrailMapper.ToResponse(audit), null);
         }
@@ -52,7 +52,7 @@ namespace ScaleTrackAPI.Services
                 var created = await _repo.Add(audit);
 
                 if (created == null)
-                    return (null, AppError.Unexpected(ErrorMessages.Get("AuditCreationFailed")));
+                    return (null, AppError.Unexpected(ErrorMessages.Get("Audit:AuditCreationFailed")));
 
                 return (AuditTrailMapper.ToResponse(created), null);
             });
@@ -64,14 +64,14 @@ namespace ScaleTrackAPI.Services
             {
                 var audit = await _repo.GetById(id);
                 if (audit == null)
-                    return (null, AppError.NotFound(ErrorMessages.Get("AuditNotFound", id)));
+                    return (null, AppError.NotFound(ErrorMessages.Get("Audit:AuditNotFound", id)));
 
                 audit.ApprovedBy = approverId;
                 audit.ApprovedAt = DateTime.UtcNow;
 
                 var updated = await _repo.Update(audit);
                 if (updated == null)
-                    return (null, AppError.Unexpected(ErrorMessages.Get("AuditApprovalFailed")));
+                    return (null, AppError.Unexpected(ErrorMessages.Get("Audit:AuditApprovalFailed")));
 
                 return (AuditTrailMapper.ToResponse(updated), null);
             });
@@ -83,7 +83,7 @@ namespace ScaleTrackAPI.Services
             {
                 var audit = await _repo.GetById(id);
                 if (audit == null)
-                    return AppError.NotFound(ErrorMessages.Get("AuditNotFound", id));
+                    return AppError.NotFound(ErrorMessages.Get("Audit:AuditNotFound", id));
 
                 await _repo.Delete(audit);
                 return null;

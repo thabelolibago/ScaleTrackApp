@@ -5,28 +5,31 @@ using System.Security.Claims;
 
 namespace ScaleTrackAPI.Repositories
 {
-    public class MenuRepository(AppDbContext context) : IMenuRepository
+    public class MenuRepository : IMenuRepository
     {
-        private readonly AppDbContext _context = context;
-        
+        private readonly AppDbContext _context;
+
+        public MenuRepository(AppDbContext context)
+        {
+            _context = context;
+        }
+
         public async Task<List<MenuItem>> GetMenuItemsForUserAsync(ClaimsPrincipal user)
         {
+            if (user == null) return new List<MenuItem>();
+
             var userRoles = user.Claims
                                 .Where(c => c.Type == ClaimTypes.Role)
-                                .Select(c => c.Value)
-                                .ToList();
+                                .Select(c => c.Value.Trim())
+                                .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-            if (!userRoles.Any())
-                return new List<MenuItem>();
+            if (!userRoles.Any()) return new List<MenuItem>();
 
-            var roleSet = userRoles.ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-            var items = await _context.MenuItems.ToListAsync();
-
-            return items
-                .Where(i => !string.IsNullOrWhiteSpace(i.Roles) &&
-                            i.Roles.Split(',').Any(r => roleSet.Contains(r.Trim())))
-                .ToList();
+            return await _context.MenuItems
+                .Where(m => !string.IsNullOrWhiteSpace(m.Roles) &&
+                            m.Roles.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                                   .Any(r => userRoles.Contains(r.Trim())))
+                .ToListAsync();
         }
     }
 }

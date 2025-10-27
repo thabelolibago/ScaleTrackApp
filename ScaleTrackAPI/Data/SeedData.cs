@@ -23,7 +23,7 @@ namespace ScaleTrackAPI.Database
                     EmailConfirmed = true,
                     FirstName = "Admin",
                     LastName = "User",
-                    Role = UserRole.Admin.ToString()
+                    Role = UserRole.Admin
                 };
                 await userManager.CreateAsync(admin, "Passw0rd!" + pepper);
                 await userManager.AddClaimAsync(admin, new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, admin.Role.ToString()));
@@ -35,7 +35,7 @@ namespace ScaleTrackAPI.Database
                     EmailConfirmed = true,
                     FirstName = "Dev",
                     LastName = "User",
-                    Role = UserRole.Developer.ToString()
+                    Role = UserRole.Developer
                 };
                 await userManager.CreateAsync(dev, "Passw0rd!" + pepper);
                 await userManager.AddClaimAsync(dev, new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, dev.Role.ToString()));
@@ -47,7 +47,7 @@ namespace ScaleTrackAPI.Database
                     EmailConfirmed = true,
                     FirstName = "Viewer",
                     LastName = "User",
-                    Role = UserRole.Viewer.ToString()
+                    Role = UserRole.Viewer
                 };
                 await userManager.CreateAsync(viewer, "Passw0rd!" + pepper);
                 await userManager.AddClaimAsync(viewer, new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Role, viewer.Role.ToString()));

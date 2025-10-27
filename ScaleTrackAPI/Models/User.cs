@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using ScaleTrackAPI.DTOs.User;
 
 namespace ScaleTrackAPI.Models
 {
@@ -6,7 +7,7 @@ namespace ScaleTrackAPI.Models
     {
         public string FirstName { get; set; } = null!;
         public string LastName { get; set; } = null!;
-        public string Role { get; set; } = "User";
+        public UserRole Role { get; set; } = UserRole.Viewer;
 
         public ICollection<Comment> Comments { get; set; } = new List<Comment>();
         public ICollection<AuditTrail> ChangesMade { get; set; } = new List<AuditTrail>();

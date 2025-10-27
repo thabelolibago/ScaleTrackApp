@@ -5,9 +5,10 @@ namespace ScaleTrackAPI.Helpers
 {
     public static class MenuItemMapper
     {
-        public static MenuItemResponse ToResponse(MenuItem menuItem)
+        public static MenuItemResponse ToResponse(this MenuItem menuItem)
         {
-            if (menuItem == null) return null!;
+            if (menuItem == null) 
+                throw new ArgumentNullException(nameof(menuItem));
 
             return new MenuItemResponse
             {
@@ -17,9 +18,20 @@ namespace ScaleTrackAPI.Helpers
             };
         }
 
-        public static List<MenuItemResponse> ToResponseList(IEnumerable<MenuItem> menuItems)
+        public static List<MenuItemResponse> ToResponseList(this IEnumerable<MenuItem> menuItems)
         {
-            return menuItems.Select(ToResponse).ToList();
+            return menuItems?.Select(i => i.ToResponse()).ToList() ?? new List<MenuItemResponse>();
+        }
+
+        public static MenuItemDto ToDto(this MenuItem menuItem)
+        {
+            return new MenuItemDto
+            {
+                Name = menuItem.Name,
+                Path = menuItem.Path,
+                Icon = menuItem.Icon,
+                Roles = menuItem.Roles.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            };
         }
     }
 }

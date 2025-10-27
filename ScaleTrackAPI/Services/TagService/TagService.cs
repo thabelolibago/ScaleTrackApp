@@ -33,7 +33,7 @@ namespace ScaleTrackAPI.Services
         {
             var tag = await _repo.GetById(id);
             if (tag == null)
-                return (null, AppError.NotFound(ErrorMessages.Get("TagNotFound", id)), null);
+                return (null, AppError.NotFound(ErrorMessages.Get("Tag:TagNotFound", id)), null);
 
             return (TagMapper.ToResponse(tag), null, null);
         }
@@ -47,20 +47,20 @@ namespace ScaleTrackAPI.Services
                 {
                     var message = validation.Errors.Count > 0
                                   ? string.Join("; ", validation.Errors)
-                                  : ErrorMessages.Get("ValidationFailed");
+                                  : ErrorMessages.Get("Validation:ValidationFailed");
                     return (null, AppError.Validation(message), null);
                 }
 
                 if (await _repo.ExistsByName(request.Name))
-                    return (null, AppError.Conflict(ErrorMessages.Get("TagAlreadyExists", request.Name)), null);
+                    return (null, AppError.Conflict(ErrorMessages.Get("Tag:TagAlreadyExists", request.Name)), null);
 
                 var tag = TagMapper.ToModel(request);
                 var created = await _repo.Add(tag);
 
                 if (created == null)
-                    return (null, AppError.Unexpected(ErrorMessages.Get("UnexpectedError")), null);
+                    return (null, AppError.Unexpected(ErrorMessages.Get("General:UnexpectedError")), null);
 
-                var successMessage = SuccessMessages.Get("TagCreated");
+                var successMessage = SuccessMessages.Get("Tag:TagCreated");
                 return (TagMapper.ToResponse(created), null, successMessage);
             });
         }
@@ -71,11 +71,11 @@ namespace ScaleTrackAPI.Services
             {
                 var tag = await _repo.GetById(id);
                 if (tag == null)
-                    return (AppError.NotFound(ErrorMessages.Get("TagNotFound", id)), null);
+                    return (AppError.NotFound(ErrorMessages.Get("Tag:TagNotFound", id)), null);
 
                 await _repo.Delete(tag);
 
-                var successMessage = SuccessMessages.Get("TagDeleted");
+                var successMessage = SuccessMessages.Get("Tag:TagDeleted");
                 return (null, successMessage);
             });
         }

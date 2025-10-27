@@ -1,33 +1,39 @@
-using ScaleTrackAPI.DTOs.AuditTrail;
 using ScaleTrackAPI.Models;
+using ScaleTrackAPI.DTOs.AuditTrail;
 
 namespace ScaleTrackAPI.Mappers
 {
     public static class AuditTrailMapper
     {
-        public static AuditTrailResponse ToResponse(AuditTrail model) => new AuditTrailResponse
+        public static AuditTrail ToModel(AuditTrailRequest request)
         {
-            Id = model.Id,
-            EntityName = model.EntityName,
-            EntityId = model.EntityId,
-            Action = model.Action,
-            ChangedBy = model.ChangedBy,
-            ChangedAt = model.ChangedAt,
-            Changes = model.Changes,
-            ApprovedBy = model.ApprovedBy,
-            ApprovedAt = model.ApprovedAt,
-        };
+            return new AuditTrail
+            {
+                EntityName = request.EntityName,
+                EntityId = request.EntityId,
+                Action = request.Action,
+                ChangedBy = request.ChangedBy,
+                Changes = request.Changes,
+                ApprovedBy = request.ApprovedBy
+            };
+        }
 
-        public static AuditTrail ToModel(AuditTrailRequest request) => new AuditTrail
+        public static AuditTrailResponse ToResponse(AuditTrail audit)
         {
-            EntityName = request.EntityName,
-            EntityId = request.EntityId,
-            Action = request.Action,
-            ChangedBy = request.ChangedBy,
-            ChangedAt = DateTime.UtcNow,
-            Changes = request.Changes,
-            ApprovedBy = request.ApprovedBy
-        };
+            return new AuditTrailResponse
+            {
+                Id = audit.Id,
+                EntityName = audit.EntityName,
+                EntityId = audit.EntityId,
+                Action = audit.Action,
+                ChangedBy = audit.ChangedBy,
+                ChangedAt = audit.ChangedAt,
+                Changes = audit.Changes,
+                ApprovedBy = audit.ApprovedBy,
+                ApprovedAt = audit.ApprovedAt
+            };
+        }
     }
 }
+
 

@@ -6,7 +6,7 @@ namespace ScaleTrackAPI.DTOs.Issue
         public string Title { get; set; } = null!;
         public string Description { get; set; } = null!;
         public string Type { get; set; } = null!;
-        public IssuePriority Priority { get; set; } = IssuePriority.Medium;
+        public IssuePriority Priority { get; set; }
         public string Status { get; set; } = IssueStatus.Open.ToString();
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
