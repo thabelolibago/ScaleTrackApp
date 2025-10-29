@@ -1,9 +1,9 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using ScaleTrackAPI.Database;
 using ScaleTrackAPI.Models;
 using System.Text;
+using System.Security.Claims;
 
 namespace ScaleTrackAPI.Extensions
 {
@@ -11,16 +11,19 @@ namespace ScaleTrackAPI.Extensions
     {
         public static IServiceCollection AddIdentityServices(this IServiceCollection services, IConfiguration config)
         {
-    
             services.AddIdentity<User, IdentityRole<int>>(options =>
             {
+                options.Password.RequireDigit = true;
+                options.Password.RequireLowercase = true;
+                options.Password.RequireUppercase = true;
                 options.Password.RequireNonAlphanumeric = false;
                 options.Password.RequiredLength = 6;
             })
-            .AddEntityFrameworkStores<AppDbContext>()
+            .AddEntityFrameworkStores<Database.AppDbContext>()
             .AddDefaultTokenProviders();
 
-            var jwtKey = config["JWT_KEY"]!;
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["Jwt:Key"]!));
+
             services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -28,12 +31,20 @@ namespace ScaleTrackAPI.Extensions
             })
             .AddJwtBearer(options =>
             {
+                options.RequireHttpsMetadata = false;
+                options.SaveToken = true;
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
-                    ValidateIssuer = false,
-                    ValidateAudience = false,
                     ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+                    IssuerSigningKey = key,
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidIssuer = config["Jwt:Issuer"],
+                    ValidAudience = config["Jwt:Audience"],
+                    ClockSkew = TimeSpan.Zero,
+                    NameClaimType = ClaimTypes.Email,
+                    RoleClaimType = ClaimTypes.Role
                 };
             });
 
@@ -41,3 +52,4 @@ namespace ScaleTrackAPI.Extensions
         }
     }
 }
+

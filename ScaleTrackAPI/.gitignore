@@ -1,66 +1,65 @@
-################################################################################
-# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
-################################################################################
-
-# Ignore environment files
+# --------------------------
+# Environment & secrets
+# --------------------------
 .env
+appsettings.Development.json
+*.local
 
-# Ignore Visual Studio specific files
+# --------------------------
+# Visual Studio / IDE files
+# --------------------------
 .vs/
+.vscode/
 *.suo
 *.user
 *.userprefs
 *.sln.docstates
+.idea/
 
-# Ignore build outputs
+# --------------------------
+# Build output
+# --------------------------
 bin/
 obj/
 
-# Ignore package directories
+# --------------------------
+# NuGet / packages
+# --------------------------
 packages/
 *.nupkg
 
-# Ignore database files
+# --------------------------
+# Database files
+# --------------------------
 *.db
 *.db-shm
 *.db-wal
+Database/ScaleTrackDB.db
+ScaleTrack.db
 
-# Ignore migrations
-**/Migrations/**
+# --------------------------
+# Migrations (optional if you track them)
+# --------------------------
 Migrations/
+**/Migrations/**
 
-# Ignore Documentation folder
+# --------------------------
+# Documentation
+# --------------------------
 Documentation/
 
-# Ignore .vs folder
-.vs/ 
-.vscode/
-
-# Ignore database folder
-Database/ScaleTrackDB.db
-
-# Ignore app settings files
-appsettings.Development.json
-.idea
-
-# Ignore IDE specific files
-.idea/
-
-# Ignore log files
+# --------------------------
+# Logs & temp files
+# --------------------------
 *.log
-
-# Ignore temporary files
 *.tmp
 *.temp
-
-# Ignore backup files
 *~
 *.bak
 
-# Ignore local configuration files
-*.local
-
-# Ignore any other files that are not needed in source control
+# --------------------------
+# Archives / binaries
+# --------------------------
 *.zip
 *.tar.gz
 *.tgz
@@ -72,5 +71,8 @@ appsettings.Development.json
 *.mdb
 *.config
 
-# Ignore GitHub specific files
+# --------------------------
+# GitHub specific
+# --------------------------
 .github/
+

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using ScaleTrackAPI.DTOs.Issue;
 
 namespace ScaleTrackAPI.Models
@@ -28,6 +29,10 @@ namespace ScaleTrackAPI.Models
         [Required]
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
+
+        [ForeignKey(nameof(CreatedBy))]
+        public int? CreatedById { get; set; }
+        public User? CreatedBy { get; set; }
 
         public ICollection<Comment> Comments { get; set; } = new List<Comment>();
         public ICollection<IssueTag> IssueTags { get; set; } = new List<IssueTag>();

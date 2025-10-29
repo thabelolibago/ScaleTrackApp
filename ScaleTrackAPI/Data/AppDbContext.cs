@@ -1,13 +1,14 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using ScaleTrackAPI.Models;
-using Microsoft.AspNetCore.Identity;
 
 namespace ScaleTrackAPI.Database
 {
     public class AppDbContext : IdentityDbContext<User, IdentityRole<int>, int>
     {
-        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+        public AppDbContext(DbContextOptions<AppDbContext> options) 
+            : base(options) { }
 
         public DbSet<Issue> Issues { get; set; }
         public DbSet<Tag> Tags { get; set; }
@@ -21,6 +22,20 @@ namespace ScaleTrackAPI.Database
         {
             base.OnModelCreating(modelBuilder);
 
+            // ========================
+            // Identity table renaming
+            // ========================
+            modelBuilder.Entity<User>().ToTable("Users");
+            modelBuilder.Entity<IdentityRole<int>>().ToTable("Roles");
+            modelBuilder.Entity<IdentityUserRole<int>>().ToTable("UserRoles");
+            modelBuilder.Entity<IdentityUserClaim<int>>().ToTable("UserClaims");
+            modelBuilder.Entity<IdentityUserLogin<int>>().ToTable("UserLogins");
+            modelBuilder.Entity<IdentityRoleClaim<int>>().ToTable("RoleClaims");
+            modelBuilder.Entity<IdentityUserToken<int>>().ToTable("UserTokens");
+
+            // ========================
+            // Enum conversions
+            // ========================
             modelBuilder.Entity<User>()
                 .Property(u => u.Role)
                 .HasConversion<string>();
@@ -37,6 +52,9 @@ namespace ScaleTrackAPI.Database
                 .Property(i => i.Status)
                 .HasConversion<string>();
 
+            // ========================
+            // Relationships
+            // ========================
             modelBuilder.Entity<Comment>()
                 .HasOne(c => c.Issue)
                 .WithMany(i => i.Comments)

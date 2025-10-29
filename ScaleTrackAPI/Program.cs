@@ -11,14 +11,23 @@ using ScaleTrackAPI.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Initialize error and success messages
 ErrorMessages.Init(builder.Configuration);
 SuccessMessages.Init(builder.Configuration);
 
+// Load environment variables from .env
 Env.Load();
 
-// ✅ Add services first
-builder.Services.AddApplicationServices(builder.Configuration);
+// ✅ Add modular services
+builder.Services
+    .AddDatabase(builder.Configuration)        // DbContext
+    .AddIdentityServices(builder.Configuration) // Identity + JWT
+    .AddRepositories()                         // Repositories
+    .AddValidators()                           // Validators
+    .AddHelpers()                              // Helper classes
+    .AddDomainServices();                       // Application services
 
+// Add controllers and Swagger
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -49,7 +58,7 @@ JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
 var app = builder.Build();
 
-// ✅ Apply migrations and seed users
+// Apply migrations and seed initial data
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -60,17 +69,21 @@ using (var scope = app.Services.CreateScope())
     await SeedData.Initialize(context, userManager, builder.Configuration);
 }
 
+// Middleware
 app.UseMiddleware<ExceptionMiddleware>();
 
 app.UseSwagger();
 app.UseSwaggerUI();
 
-// 💡 Optional: comment out HTTPS redirect if it’s causing local redirect issues
+// Optional HTTPS redirect
 // app.UseHttpsRedirection();
 
+// Authentication & Authorization
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Map controllers
 app.MapControllers();
 
+// Run app
 app.Run();

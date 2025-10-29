@@ -9,6 +9,5 @@ namespace ScaleTrackAPI.Services.Auth
         Task<(LoginResponse? Entity, AppError? Error)> LoginAsync(LoginRequest request);
         Task<(LoginResponse? Entity, AppError? Error)> RefreshTokenAsync(RefreshTokenRequest request);
         Task<AppError?> LogoutAsync(LogoutRequest request);
-        Task<(string AccessToken, string RefreshToken)> GenerateTokensAsync(User user);
     }
 }
