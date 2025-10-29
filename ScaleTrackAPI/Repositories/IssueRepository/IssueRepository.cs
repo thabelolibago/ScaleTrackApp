@@ -4,31 +4,43 @@ using ScaleTrackAPI.Database;
 
 namespace ScaleTrackAPI.Repositories
 {
-    public class IssueRepository(AppDbContext context) : IIssueRepository
+    public class IssueRepository : IIssueRepository
     {
-        private readonly AppDbContext _context = context;
+        private readonly AppDbContext _context;
+
+        public IssueRepository(AppDbContext context)
+        {
+            _context = context;
+        }
 
         public async Task<Issue> AddIssue(Issue issue)
         {
-            _context.Issues.Add(issue);
+            await _context.Issues.AddAsync(issue);
             await _context.SaveChangesAsync();
             return issue;
         }
 
         public async Task<Issue?> GetById(int id)
         {
-            return await _context.Issues.FindAsync(id);
+            // Include CreatedBy to avoid null references in the mapper
+            return await _context.Issues
+                .Include(i => i.CreatedBy)
+                .FirstOrDefaultAsync(i => i.Id == id);
         }
 
         public async Task<List<Issue>> GetAll()
         {
-            return await _context.Issues.ToListAsync();
+            // Include CreatedBy for consistent response mapping
+            return await _context.Issues
+                .Include(i => i.CreatedBy)
+                .ToListAsync();
         }
 
         public async Task<Issue?> UpdateIssue(Issue issue)
         {
             var existing = await _context.Issues.FindAsync(issue.Id);
-            if (existing == null) return null;
+            if (existing == null)
+                return null;
 
             _context.Entry(existing).CurrentValues.SetValues(issue);
             await _context.SaveChangesAsync();
@@ -38,11 +50,11 @@ namespace ScaleTrackAPI.Repositories
         public async Task DeleteIssue(int id)
         {
             var issue = await _context.Issues.FindAsync(id);
-            if (issue != null)
-            {
-                _context.Issues.Remove(issue);
-                await _context.SaveChangesAsync();
-            }
+            if (issue == null)
+                return;
+
+            _context.Issues.Remove(issue);
+            await _context.SaveChangesAsync();
         }
     }
 }

@@ -14,17 +14,23 @@ namespace ScaleTrackAPI.Mappers
             Priority = issue.Priority,
             Status = issue.Status.ToString(),
             CreatedAt = issue.CreatedAt,
-            UpdatedAt = issue.UpdatedAt
+            UpdatedAt = issue.UpdatedAt,
+            CreatedById = issue.CreatedById ?? 0,
+            CreatedByName = issue.CreatedBy != null
+        ? $"{issue.CreatedBy.FirstName} {issue.CreatedBy.LastName}"
+        : "Unknown",
+            CreatedByEmail = issue.CreatedBy?.Email ?? "N/A"
         };
 
-        public static Issue ToModel(IssueRequest request) => new Issue
+        public static Issue ToModel(IssueRequest request, int createdById) => new Issue
         {
             Title = request.Title,
             Description = request.Description,
             Type = request.Type,
             Priority = request.Priority,
             Status = IssueStatus.Open,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            CreatedById = createdById
         };
     }
 }

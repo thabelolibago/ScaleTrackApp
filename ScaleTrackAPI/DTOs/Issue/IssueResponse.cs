@@ -10,5 +10,9 @@ namespace ScaleTrackAPI.DTOs.Issue
         public string Status { get; set; } = IssueStatus.Open.ToString();
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
+
+        public int CreatedById { get; set; }
+        public string? CreatedByName { get; set; }
+        public string? CreatedByEmail { get; set; }
     }
 }

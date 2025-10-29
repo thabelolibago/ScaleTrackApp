@@ -1,5 +1,8 @@
 using ScaleTrackAPI.Models;
 using ScaleTrackAPI.DTOs.AuditTrail;
+using System.Security.Claims;
+using System.Text.Json;
+using ScaleTrackAPI.Extensions;
 
 namespace ScaleTrackAPI.Mappers
 {
@@ -31,6 +34,34 @@ namespace ScaleTrackAPI.Mappers
                 Changes = audit.Changes,
                 ApprovedBy = audit.ApprovedBy,
                 ApprovedAt = audit.ApprovedAt
+            };
+        }
+
+        // New helper method for services
+        public static AuditTrail CreateAudit<T>(
+            string action,
+            int entityId,
+            T oldValue,
+            T newValue,
+            ClaimsPrincipal user,
+            string? entityName = null)
+        {
+            var userId = user.GetUserId() ?? 0;
+
+            var changes = new
+            {
+                Old = oldValue,
+                New = newValue
+            };
+
+            return new AuditTrail
+            {
+                EntityName = entityName ?? typeof(T).Name,
+                EntityId = entityId,
+                Action = action,
+                ChangedBy = userId,
+                Changes = JsonSerializer.Serialize(changes),
+                ChangedAt = DateTime.UtcNow
             };
         }
     }

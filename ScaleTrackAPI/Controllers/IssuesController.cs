@@ -15,7 +15,7 @@ namespace ScaleTrackAPI.Controllers
         private readonly IssueService _service = service;
 
         [HttpGet]
-        [AllowAnonymous]
+        [Authorize]
         public async Task<ActionResult<IEnumerable<IssueResponse>>> GetAll()
         {
             var issues = await _service.GetAllIssues();
@@ -31,23 +31,20 @@ namespace ScaleTrackAPI.Controllers
             return Ok(issue);
         }
 
-        [HttpPost("create")]
-        [Authorize(Roles = "Admin,Developer")]
-        public async Task<IActionResult> Create([FromBody] IssueRequest request)
+        [HttpPost]
+        [Authorize]
+        public async Task<IActionResult> CreateIssue([FromBody] IssueRequest request)
         {
-            var (response, error) = await _service.CreateIssue(request);
-
-            if (error != null) return BadRequest(error);
-
-            return CreatedAtAction(nameof(GetById), new { id = response!.Id }, response);
+            var (response, error) = await _service.CreateIssue(request, User);
+            if (error != null)
+                return BadRequest(new { message = error.Message });
+            return Ok(response);
         }
-
-
         [HttpPut("{id:int}/update")]
         [Authorize(Roles = "Admin,Developer")]
         public async Task<IActionResult> Update(int id, [FromBody] IssueRequest request)
         {
-            var (response, error) = await _service.UpdateIssue(id, request);
+            var (response, error) = await _service.UpdateIssue(id, request, User);
             if (error is not null) return BadRequest(new { error.Message });
             return Ok(response);
         }
@@ -56,7 +53,7 @@ namespace ScaleTrackAPI.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateStatus(int id, [FromBody] int statusIndex)
         {
-            var (response, error, message) = await _service.UpdateIssueStatus(id, statusIndex);
+            var (response, error, message) = await _service.UpdateIssueStatus(id, statusIndex, User);
 
             if (error is not null)
                 return BadRequest(new { error.Message });
@@ -69,7 +66,7 @@ namespace ScaleTrackAPI.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
-            var (error, message) = await _service.DeleteIssue(id);
+            var (error, message) = await _service.DeleteIssue(id, User);
 
             if (error is not null)
                 return BadRequest(new { error.Message });

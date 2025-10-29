@@ -2,17 +2,23 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ScaleTrackAPI.DTOs.User;
 using ScaleTrackAPI.DTOs.Auth;
-using ScaleTrackAPI.Services;
 using ScaleTrackAPI.Services.Auth;
+using ScaleTrackAPI.Services;
 
 namespace ScaleTrackAPI.Controllers
 {
     [ApiController]
     [Route("api/v1/[controller]")]
-    public class AuthController(IAuthService auth, UserService userService) : ControllerBase
+    public class AuthController : ControllerBase
     {
-        private readonly IAuthService _auth = auth;
-        private readonly UserService _userService = userService;
+        private readonly IAuthService _auth;
+        private readonly UserService _userService;
+
+        public AuthController(IAuthService auth, UserService userService)
+        {
+            _auth = auth;
+            _userService = userService;
+        }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
