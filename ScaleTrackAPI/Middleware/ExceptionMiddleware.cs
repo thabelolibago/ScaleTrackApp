@@ -32,7 +32,7 @@ namespace ScaleTrackAPI.Middleware
                 var errorResponse = new
                 {
                     StatusCode = (int)HttpStatusCode.InternalServerError,
-                    Message = ErrorMessages.Get("UnexpectedError")
+                    Message = ErrorMessages.Get("General:UnexpectedError")
                 };
 
                 context.Response.ContentType = "application/json";

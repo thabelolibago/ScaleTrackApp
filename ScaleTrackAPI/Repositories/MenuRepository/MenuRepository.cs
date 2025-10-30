@@ -19,17 +19,24 @@ namespace ScaleTrackAPI.Repositories
             if (user == null) return new List<MenuItem>();
 
             var userRoles = user.Claims
-                                .Where(c => c.Type == ClaimTypes.Role)
-                                .Select(c => c.Value.Trim())
-                                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+                .Where(c => c.Type == ClaimTypes.Role)
+                .Select(c => c.Value.Trim())
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
             if (!userRoles.Any()) return new List<MenuItem>();
 
-            return await _context.MenuItems
-                .Where(m => !string.IsNullOrWhiteSpace(m.Roles) &&
-                            m.Roles.Split(',', StringSplitOptions.RemoveEmptyEntries)
-                                   .Any(r => userRoles.Contains(r.Trim())))
+            var allMenuItems = await _context.MenuItems
+                .Where(m => !string.IsNullOrWhiteSpace(m.Roles))
                 .ToListAsync();
+
+            var filteredMenuItems = allMenuItems
+                .Where(m =>
+                    m.Roles.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                           .Any(r => userRoles.Contains(r.Trim())))
+                .ToList();
+
+            return filteredMenuItems;
         }
     }
 }
+

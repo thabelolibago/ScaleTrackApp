@@ -37,7 +37,12 @@ namespace ScaleTrackAPI.Helpers
                 EntityId = entityId,
                 Action = action,
                 ChangedBy = userId,
-                Changes = JsonSerializer.Serialize(changes),
+                Changes = JsonSerializer.Serialize(changes, new JsonSerializerOptions
+                {
+                    WriteIndented = true, // Makes JSON readable
+                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
+                    ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles
+                }),
                 ChangedAt = DateTime.UtcNow
             };
 
