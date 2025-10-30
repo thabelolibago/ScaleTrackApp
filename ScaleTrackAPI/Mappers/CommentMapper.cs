@@ -1,25 +1,32 @@
-using ScaleTrackAPI.Models;
 using ScaleTrackAPI.DTOs.Comment;
+using ScaleTrackAPI.Models;
 
 namespace ScaleTrackAPI.Mappers
 {
     public static class CommentMapper
     {
-        public static CommentResponse ToResponse(Comment comment) => new CommentResponse
+        public static Comment ToModel(int issueId, int userId, CommentRequest request)
         {
-            Id = comment.Id,
-            IssueId = comment.IssueId,
-            UserId = comment.UserId,
-            Content = comment.Content,
-            CreatedAt = comment.CreatedAt
-        };
+            return new Comment
+            {
+                IssueId = issueId,
+                UserId = userId,
+                Content = request.Content,
+                CreatedAt = DateTime.UtcNow
+            };
+        }
 
-        public static Comment ToModel(int issueId, CommentRequest request) => new Comment
+        public static CommentResponse ToResponse(Comment comment, string? userName = null)
         {
-            IssueId = issueId,
-            UserId = request.UserId,
-            Content = request.Content,
-            CreatedAt = DateTime.UtcNow
-        };
+            return new CommentResponse
+            {
+                Id = comment.Id,
+                IssueId = comment.IssueId,
+                UserId = comment.UserId,
+                UserName = userName ?? string.Empty,
+                Content = comment.Content,
+                CreatedAt = comment.CreatedAt
+            };
+        }
     }
 }

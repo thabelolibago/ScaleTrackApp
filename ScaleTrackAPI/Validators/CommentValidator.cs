@@ -17,9 +17,6 @@ namespace ScaleTrackAPI.Helpers
             if (string.IsNullOrWhiteSpace(request.Content))
                 errors.Add("Comment content is required.");
 
-            if (request.UserId <= 0)
-                errors.Add("A valid UserId is required.");
-
             return errors.Count == 0
                 ? ValidationResult.Success()
                 : ValidationResult.Failure(errors.ToArray());

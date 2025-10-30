@@ -33,7 +33,7 @@ namespace ScaleTrackAPI.Controllers
         [Authorize(Roles = "Developer,Admin")]
         public async Task<IActionResult> AddComment(int issueId, [FromBody] CommentRequest request)
         {
-            var (response, error) = await _service.AddCommentAsync(issueId, request);
+            var (response, error) = await _service.AddCommentAsync(issueId, request, User);
             if (error is not null) return BadRequest(new { error.Message });
             return CreatedAtAction(nameof(GetById), new { issueId, id = response!.Id }, response);
         }
@@ -42,7 +42,7 @@ namespace ScaleTrackAPI.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteComment(int issueId, int id)
         {
-            var (error, message) = await _service.DeleteCommentAsync(issueId, id);
+            var (error, message) = await _service.DeleteCommentAsync(issueId, id, User);
 
             if (error is not null)
                 return BadRequest(new { error.Message });
