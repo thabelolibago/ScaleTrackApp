@@ -37,11 +37,14 @@ packages/
 Database/ScaleTrackDB.db
 ScaleTrack.db
 
+# Ignore all database directories if you have any
+Database/**
+
 # --------------------------
-# Migrations (optional if you track them)
+# EF Core Migrations
 # --------------------------
 Migrations/
-**/Migrations/**
+**/Migrations/
 
 # --------------------------
 # Documentation
@@ -75,4 +78,3 @@ Documentation/
 # GitHub specific
 # --------------------------
 .github/
-
