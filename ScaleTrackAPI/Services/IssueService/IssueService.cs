@@ -155,7 +155,7 @@ namespace ScaleTrackAPI.Services
 
                 // --- AUDIT ---
                 var audit = AuditTrailMapper.CreateAudit(
-                    action: "StatusUpdated",
+                    action: "Status Updated",
                     entityId: fullIssue!.Id,
                     oldValue: oldIssue,
                     newValue: fullIssue,

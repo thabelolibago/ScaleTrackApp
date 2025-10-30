@@ -33,7 +33,7 @@ namespace ScaleTrackAPI.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateRole(int id, [FromBody] int roleIndex)
         {
-            var (error, message) = await _service.UpdateUserRole(id, roleIndex);
+            var (error, message) = await _service.UpdateUserRole(id, roleIndex, User);
 
             if (error != null)
                 return BadRequest(new { error.Message });
@@ -46,7 +46,7 @@ namespace ScaleTrackAPI.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
-            var (error, message) = await _service.DeleteUser(id);
+            var (error, message) = await _service.DeleteUser(id, User);
 
             if (error != null)
                 return BadRequest(new { error.Message });

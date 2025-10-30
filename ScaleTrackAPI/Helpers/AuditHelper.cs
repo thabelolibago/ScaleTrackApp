@@ -39,7 +39,7 @@ namespace ScaleTrackAPI.Helpers
                 ChangedBy = userId,
                 Changes = JsonSerializer.Serialize(changes, new JsonSerializerOptions
                 {
-                    WriteIndented = true, // Makes JSON readable
+                    WriteIndented = true,
                     DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
                     ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles
                 }),

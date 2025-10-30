@@ -24,7 +24,7 @@ namespace ScaleTrackAPI.Controllers
         [Authorize(Roles = "Admin,Developer")]
         public async Task<IActionResult> Add(int issueId, [FromBody] IssueTagRequest request)
         {
-            var (response, error, message) = await _service.AddTag(issueId, request);
+            var (response, error, message) = await _service.AddTag(issueId, request, User);
 
             if (error is not null)
                 return BadRequest(new { error.Message });
@@ -36,7 +36,7 @@ namespace ScaleTrackAPI.Controllers
         [Authorize(Roles = "Admin,Developer")]
         public async Task<IActionResult> Delete(int issueId, int tagId)
         {
-            var (error, message) = await _service.RemoveTag(issueId, tagId);
+            var (error, message) = await _service.RemoveTag(issueId, tagId, User);
 
             if (error is not null)
                 return BadRequest(new { error.Message });
