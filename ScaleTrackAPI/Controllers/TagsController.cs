@@ -32,7 +32,7 @@ namespace ScaleTrackAPI.Controllers
         [Authorize(Roles = "Admin,Developer")]
         public async Task<IActionResult> Create([FromBody] TagRequest request)
         {
-            var (response, error, message) = await _service.CreateTag(request);
+            var (response, error, message) = await _service.CreateTag(request, User);
 
             if (error is not null)
                 return BadRequest(new { error.Message });
@@ -44,7 +44,7 @@ namespace ScaleTrackAPI.Controllers
         [Authorize(Roles = "Admin,Developer")]
         public async Task<IActionResult> Delete(int id)
         {
-            var (error, message) = await _service.DeleteTag(id);
+            var (error, message) = await _service.DeleteTag(id, User);
 
             if (error is not null)
                 return BadRequest(new { error.Message });

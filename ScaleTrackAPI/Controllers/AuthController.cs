@@ -35,7 +35,7 @@ namespace ScaleTrackAPI.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
-            var (response, error, message) = await _userService.RegisterUser(request);
+            var (response, error, message) = await _userService.RegisterUser(request, User);
 
             if (error != null)
                 return BadRequest(new { error.Message });
