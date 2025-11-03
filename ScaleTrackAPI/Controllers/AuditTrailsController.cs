@@ -26,6 +26,17 @@ namespace ScaleTrackAPI.Controllers
             var (audit, _) = await _service.GetById(id);
             return audit == null ? NotFound() : Ok(audit);
         }
+
+        [HttpDelete("{id:int}")]
+        [Authorize(Roles = "Admin,Developer")]
+        public async Task<ActionResult> Delete(int id)
+        {
+            var error = await _service.DeleteAuditTrail(id);
+            return error != null
+                ? NotFound(new { message = error.Message })
+                : NoContent();
+        }
+
     }
 }
 

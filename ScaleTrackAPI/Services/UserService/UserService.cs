@@ -8,16 +8,19 @@ using ScaleTrackAPI.Helpers;
 using ScaleTrackAPI.Extensions;
 using System.Security.Claims;
 using ScaleTrackAPI.Messages;
+using ScaleTrackAPI.Services.Auth;
 
-namespace ScaleTrackAPI.Services
+
+namespace ScaleTrackAPI.Services.UserService
 {
-    public class UserService(IUserRepository repo, UserManager<User> userManager, IValidator<UserRequest> validator, PasswordHelper passwordHelper, AuditHelper auditHelper)
+    public class UserService(ITokenService tokenService ,IUserRepository repo, UserManager<User> userManager, IValidator<UserRequest> validator, PasswordHelper passwordHelper, UserAuditTrail auditHelper)
     {
         private readonly IUserRepository _repo = repo;
         private readonly UserManager<User> _userManager = userManager;
         private readonly IValidator<UserRequest> _validator = validator;
         private readonly PasswordHelper _passwordHelper = passwordHelper;
-        private readonly AuditHelper _auditHelper = auditHelper;
+        private readonly UserAuditTrail _auditHelper = auditHelper;
+        private readonly ITokenService _tokenService = tokenService;
 
         public async Task<List<UserResponse>> GetAllUsers()
             => (await _repo.GetAll()).Select(UserMapper.ToResponse).ToList();
@@ -28,20 +31,19 @@ namespace ScaleTrackAPI.Services
             if (u == null) return (null, AppError.NotFound(ErrorMessages.Get("User:UserNotFound", id)));
             return (UserMapper.ToResponse(u), null);
         }
-
-        // 🔹 Register new user with audit
-        public async Task<(UserResponse? Response, AppError? Error, string Message)> RegisterUser(RegisterRequest request, ClaimsPrincipal userClaims)
+        public async Task<(RegisterResponse? Response, AppError? Error)> RegisterUser(RegisterRequest request)
         {
             if (request == null)
-                return (null, AppError.Validation(ErrorMessages.Get("Validation:RequestNotNull")), string.Empty);
+                return (null, AppError.Validation(ErrorMessages.Get("Validation:RequestNotNull")));
 
             var userRequest = UserMapper.FromRegisterRequest(request);
+
             var validationError = _validator.ToAppError(userRequest);
             if (validationError != null)
-                return (null, validationError, string.Empty);
+                return (null, validationError);
 
             if (await _repo.GetByEmail(request.Email) != null)
-                return (null, AppError.Conflict(ErrorMessages.Get("User:EmailAlreadyExists", request.Email)), string.Empty);
+                return (null, AppError.Conflict(ErrorMessages.Get("User:EmailAlreadyExists", request.Email)));
 
             var user = UserMapper.ToModel(userRequest);
             var passwordWithPepper = _passwordHelper.WithPepper(request.Password);
@@ -50,28 +52,31 @@ namespace ScaleTrackAPI.Services
             if (!result.Succeeded)
             {
                 var errors = string.Join("; ", result.Errors.Select(e => e.Description));
-                return (null, AppError.Validation(errors), string.Empty);
+                return (null, AppError.Validation(errors));
             }
 
             await _userManager.AddClaimAsync(user, new Claim(ClaimTypes.Role, user.Role.ToString()));
 
-            // 🔹 Audit log
-            await _auditHelper.RecordAuditAsync(
-                action: "Created",
-                entityId: user.Id,
-                oldValue: null!,
-                newValue: user,
-                entityName: nameof(User),
-                user: userClaims
-            );
+            var (accessToken, refreshToken) = await _tokenService.CreateTokensAsync(user);
 
-            var response = UserMapper.ToResponse(user);
-            var message = SuccessMessages.Get("User:UserRegistered");
+            var actor = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
+            }, "Registration"));
 
-            return (response, null, message);
+            await _auditHelper.RecordCreate(user, actor);
+
+            var response = new RegisterResponse
+            {
+                User = UserMapper.ToResponse(user),
+                AccessToken = accessToken,
+                RefreshToken = refreshToken,
+                Message = SuccessMessages.Get("User:UserRegistered")
+            };
+
+            return (response, null);
         }
 
-        // 🔹 Update user role with audit
         public async Task<(AppError? Error, string Message)> UpdateUserRole(int id, int roleIndex, ClaimsPrincipal userClaims)
         {
             if (!Enum.IsDefined(typeof(UserRole), roleIndex))
@@ -83,14 +88,13 @@ namespace ScaleTrackAPI.Services
             if (user == null)
                 return (AppError.NotFound(ErrorMessages.Get("User:UserNotFound", id)), string.Empty);
 
-            // Manual copy of relevant fields for audit
-            var oldUser = new
+            var oldUser = new User
             {
-                user.Id,
-                user.Email,
-                user.UserName,
-                user.FirstName,
-                user.LastName,
+                Id = user.Id,
+                Email = user.Email,
+                UserName = user.UserName,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
                 Role = user.Role
             };
 
@@ -99,29 +103,11 @@ namespace ScaleTrackAPI.Services
             if (!result.Succeeded)
                 return (AppError.Conflict(ErrorMessages.Get("User:FailedToUpdateUser")), string.Empty);
 
-            // Audit log
-            await _auditHelper.RecordAuditAsync(
-                action: "Updated Role",
-                entityId: user.Id,
-                oldValue: oldUser,
-                newValue: new
-                {
-                    user.Id,
-                    user.Email,
-                    user.UserName,
-                    user.FirstName,
-                    user.LastName,
-                    Role = user.Role
-                },
-                entityName: nameof(User),
-                user: userClaims
-            );
+            await _auditHelper.RecordUpdate(oldUser, user, userClaims);
 
             return (null, SuccessMessages.Get("User:UserUpdated"));
         }
 
-
-        // 🔹 Delete user with audit
         public async Task<(AppError? Error, string? Message)> DeleteUser(int id, ClaimsPrincipal userClaims)
         {
             var user = await _repo.GetById(id);
@@ -147,16 +133,8 @@ namespace ScaleTrackAPI.Services
             {
                 await _repo.Delete(user);
             }
-
-            // Audit log
-            await _auditHelper.RecordAuditAsync(
-                action: "Deleted",
-                entityId: user.Id,
-                oldValue: oldUser,
-                newValue: null!,
-                entityName: nameof(User),
-                user: userClaims
-            );
+            
+            await _auditHelper.RecordDelete(user, userClaims);
 
             return (null, SuccessMessages.Get("User:UserDeleted"));
         }

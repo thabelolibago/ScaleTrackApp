@@ -1,5 +1,10 @@
 using ScaleTrackAPI.Services;
 using ScaleTrackAPI.Services.Auth;
+using ScaleTrackAPI.Services.CommentService;
+using ScaleTrackAPI.Services.IssueService;
+using ScaleTrackAPI.Services.IssueTagService;
+using ScaleTrackAPI.Services.TagService;
+using ScaleTrackAPI.Services.UserService;
 
 namespace ScaleTrackAPI.Extensions
 {

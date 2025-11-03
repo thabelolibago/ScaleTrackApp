@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ScaleTrackAPI.DTOs.User;
-using ScaleTrackAPI.Services;
+using ScaleTrackAPI.Services.UserService;
 
 namespace ScaleTrackAPI.Controllers
 {

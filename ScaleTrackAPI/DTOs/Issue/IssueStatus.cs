@@ -14,6 +14,9 @@ namespace ScaleTrackAPI.DTOs.Issue
         Resolved = 2,
 
         [Description("Closed")]
-        Closed = 3
+        Closed = 3,
+
+        [Description("Reopened")]
+        Reopened = 4
     }
 }

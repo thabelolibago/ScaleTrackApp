@@ -18,15 +18,12 @@ namespace ScaleTrackAPI.Models
         [MaxLength(50)]
         public string Action { get; set; } = null!;
         
-        [Required]
-        [MaxLength(100)]
-        public int ChangedBy { get; set; }
+        public int? ChangedBy { get; set; }
 
         [Required]
         public DateTime ChangedAt { get; set; } = DateTime.UtcNow;
 
         [Required]
-        [MaxLength(1000)]
         public string Changes { get; set; } = null!;
 
         public int? ApprovedBy { get; set; }
@@ -35,5 +32,8 @@ namespace ScaleTrackAPI.Models
 
         public User? ChangedByUser { get; set; }
         public User? ApprovedByUser { get; set; }
+
+        public bool IsDeleted { get; set; } = false;
+        public DateTime? DeletedAt { get; set; }
     }
 }

@@ -8,23 +8,23 @@ using ScaleTrackAPI.Database;
 using System.Security.Claims;
 using ScaleTrackAPI.Models;
 
-namespace ScaleTrackAPI.Services
+namespace ScaleTrackAPI.Services.TagService
 {
     public class TagService : TransactionalServiceBase
     {
         private readonly ITagRepository _repo;
-        private readonly IValidator<TagRequest> _validator;
-        private readonly AuditHelper _auditHelper;
+        private readonly TagBusinessRules _businessRules;
+        private readonly TagAuditTrail _auditHelper;
 
         public TagService(
             AppDbContext context,
             ITagRepository repo,
-            IValidator<TagRequest> validator,
-            AuditHelper auditHelper
+            TagBusinessRules businessRules,
+            TagAuditTrail auditHelper
         ) : base(context)
         {
             _repo = repo;
-            _validator = validator;
+            _businessRules = businessRules;
             _auditHelper = auditHelper;
         }
 
@@ -45,22 +45,13 @@ namespace ScaleTrackAPI.Services
 
         public async Task<(TagResponse? Response, AppError? Error, string? Message)> CreateTag(
             TagRequest request,
-            ClaimsPrincipal userClaims
-        )
+            ClaimsPrincipal userClaims)
         {
             return await ExecuteInTransactionAsync<(TagResponse? Response, AppError? Error, string? Message)>(async () =>
             {
-                var validation = _validator.Validate(request);
+                var validation = await _businessRules.ValidateCreateAsync(request);
                 if (!validation.IsValid)
-                {
-                    var message = validation.Errors.Count > 0
-                                  ? string.Join("; ", validation.Errors)
-                                  : ErrorMessages.Get("Validation:ValidationFailed");
-                    return (null, AppError.Validation(message), null);
-                }
-
-                if (await _repo.ExistsByName(request.Name))
-                    return (null, AppError.Conflict(ErrorMessages.Get("Tag:TagAlreadyExists", request.Name)), null);
+                    return (null, validation.Error, null);
 
                 var tag = TagMapper.ToModel(request);
                 var created = await _repo.Add(tag);
@@ -68,15 +59,7 @@ namespace ScaleTrackAPI.Services
                 if (created == null)
                     return (null, AppError.Unexpected(ErrorMessages.Get("General:UnexpectedError")), null);
 
-                // 🔹 Record audit trail
-                await _auditHelper.RecordAuditAsync(
-                    action: "Created",
-                    entityId: created.Id,
-                    oldValue: null!,
-                    newValue: created,
-                    entityName: nameof(Tag),
-                    user: userClaims
-                );
+                await _auditHelper.RecordCreate(created, userClaims);
 
                 var successMessage = SuccessMessages.Get("Tag:TagCreated");
                 return (TagMapper.ToResponse(created), null, successMessage);
@@ -85,26 +68,18 @@ namespace ScaleTrackAPI.Services
 
         public async Task<(AppError? Error, string? Message)> DeleteTag(
             int id,
-            ClaimsPrincipal userClaims
-        )
+            ClaimsPrincipal userClaims)
         {
             return await ExecuteInTransactionAsync<(AppError? Error, string? Message)>(async () =>
             {
-                var tag = await _repo.GetById(id);
-                if (tag == null)
-                    return (AppError.NotFound(ErrorMessages.Get("Tag:TagNotFound", id)), null);
+                var validation = await _businessRules.ValidateDeleteAsync(id);
+                if (!validation.Exists)
+                    return (validation.Error, null);
 
+                var tag = await _repo.GetById(id);
                 await _repo.Delete(tag);
 
-                // 🔹 Record audit trail
-                await _auditHelper.RecordAuditAsync(
-                    action: "Deleted",
-                    entityId: tag.Id,
-                    oldValue: tag,
-                    newValue: null!,
-                    entityName: nameof(Tag),
-                    user: userClaims
-                );
+                await _auditHelper.RecordDelete(tag, userClaims);
 
                 var successMessage = SuccessMessages.Get("Tag:TagDeleted");
                 return (null, successMessage);
@@ -112,4 +87,5 @@ namespace ScaleTrackAPI.Services
         }
     }
 }
+
 

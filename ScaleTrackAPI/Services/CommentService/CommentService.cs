@@ -5,33 +5,25 @@ using ScaleTrackAPI.Helpers;
 using ScaleTrackAPI.Errors;
 using ScaleTrackAPI.Messages;
 using ScaleTrackAPI.Database;
-using ScaleTrackAPI.Models;
 using System.Security.Claims;
 
-namespace ScaleTrackAPI.Services
+namespace ScaleTrackAPI.Services.CommentService
 {
     public class CommentService : TransactionalServiceBase
     {
         private readonly ICommentRepository _commentRepo;
-        private readonly IIssueRepository _issueRepo;
-        private readonly IUserRepository _userRepo;
-        private readonly IValidator<CommentRequest> _validator;
-        private readonly AuditHelper _auditHelper;
+        private readonly CommentBusinessRules _businessRules;
+        private readonly CommentAuditTrail _auditHelper;
 
         public CommentService(
             AppDbContext context,
             ICommentRepository commentRepo,
-            IIssueRepository issueRepo,
-            IUserRepository userRepo,
-            IValidator<CommentRequest> validator,
-            AuditHelper auditHelper
+            CommentBusinessRules businessRules,
+            CommentAuditTrail auditHelper
         ) : base(context)
-
         {
             _commentRepo = commentRepo;
-            _issueRepo = issueRepo;
-            _userRepo = userRepo;
-            _validator = validator;
+            _businessRules = businessRules;
             _auditHelper = auditHelper;
         }
 
@@ -42,8 +34,8 @@ namespace ScaleTrackAPI.Services
 
             foreach (var comment in comments)
             {
-                var user = await _userRepo.GetById(comment.UserId);
-                responses.Add(CommentMapper.ToResponse(comment, $"{user?.FirstName} {user?.LastName}".Trim()));
+                var userFullName = await _businessRules.GetUserFullNameAsync(comment.UserId);
+                responses.Add(CommentMapper.ToResponse(comment, userFullName));
             }
 
             return responses;
@@ -55,45 +47,33 @@ namespace ScaleTrackAPI.Services
             if (comment == null)
                 return (null, AppError.NotFound(ErrorMessages.Get("Comment:CommentNotFound", id)));
 
-            var user = await _userRepo.GetById(comment.UserId);
-            var response = CommentMapper.ToResponse(comment, $"{user?.FirstName} {user?.LastName}".Trim());
+            var userFullName = await _businessRules.GetUserFullNameAsync(comment.UserId);
+            var response = CommentMapper.ToResponse(comment, userFullName);
 
             return (response, null);
         }
 
-        public async Task<(CommentResponse? Response, AppError? Error)> AddCommentAsync(int issueId, CommentRequest request, ClaimsPrincipal userClaims
-        )
+        public async Task<(CommentResponse? Response, AppError? Error)> AddCommentAsync(
+            int issueId,
+            CommentRequest request,
+            ClaimsPrincipal userClaims)
         {
             return await ExecuteInTransactionAsync<(CommentResponse? Response, AppError? Error)>(async () =>
             {
-                if (!int.TryParse(userClaims.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId))
-                    return (null, AppError.Unauthorized(ErrorMessages.Get("General:Unauthorized")));
-
-                var issue = await _issueRepo.GetById(issueId);
-                if (issue == null)
-                    return (null, AppError.NotFound(ErrorMessages.Get("Comment:IssueForCommentNotFound", issueId)));
-
-                var validation = _validator.Validate(request);
+                var validation = await _businessRules.ValidateCreateAsync(issueId, request, userClaims);
                 if (!validation.IsValid)
-                    return (null, AppError.Validation(string.Join("; ", validation.Errors)));
+                    return (null, validation.Error);
 
-                var comment = CommentMapper.ToModel(issueId, userId, request);
+                var comment = CommentMapper.ToModel(issueId, validation.UserId, request);
                 var created = await _commentRepo.Add(comment);
                 if (created == null)
                     return (null, AppError.Unexpected(ErrorMessages.Get("General:UnexpectedError")));
 
-                var user = await _userRepo.GetById(userId);
+                await _auditHelper.RecordCreate(created, userClaims);
 
-                await _auditHelper.RecordAuditAsync(
-                    action: "Created",
-                    entityId: created.Id,
-                    oldValue: null,
-                    newValue: created,
-                    entityName: nameof(Comment),
-                    user: userClaims
-                );
+                var userFullName = await _businessRules.GetUserFullNameAsync(validation.UserId);
+                var response = CommentMapper.ToResponse(created, userFullName);
 
-                var response = CommentMapper.ToResponse(created, $"{user?.FirstName} {user?.LastName}".Trim());
                 return (response, null);
             });
         }
@@ -101,8 +81,7 @@ namespace ScaleTrackAPI.Services
         public async Task<(AppError? Error, string? Message)> DeleteCommentAsync(
             int issueId,
             int id,
-            ClaimsPrincipal userClaims
-        )
+            ClaimsPrincipal userClaims)
         {
             return await ExecuteInTransactionAsync<(AppError? Error, string? Message)>(async () =>
             {
@@ -110,22 +89,12 @@ namespace ScaleTrackAPI.Services
                 if (comment == null)
                     return (AppError.NotFound(ErrorMessages.Get("Comment:CommentNotFound", id)), null);
 
-                if (!int.TryParse(userClaims.FindFirst(ClaimTypes.NameIdentifier)?.Value, out int userId))
-                    return (AppError.Unauthorized(ErrorMessages.Get("General:Unauthorized")), null);
-
-                if (comment.UserId != userId)
-                    return (AppError.Unauthorized(ErrorMessages.Get("Comment:FailedToDeleteComment")), null);
+                var validation = await _businessRules.ValidateDeleteAsync(comment, userClaims);
+                if (!validation.IsAuthorized)
+                    return (validation.Error, null);
 
                 await _commentRepo.Delete(comment);
-
-                await _auditHelper.RecordAuditAsync(
-                    action: "Deleted",
-                    entityId: comment.Id,
-                    oldValue: comment,
-                    newValue: null,
-                    entityName: nameof(Comment),
-                    user: userClaims
-                );
+                await _auditHelper.RecordDelete(comment, userClaims);
 
                 return (null, SuccessMessages.Get("Comment:CommentDeleted"));
             });

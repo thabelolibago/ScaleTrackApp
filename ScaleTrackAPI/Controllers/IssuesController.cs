@@ -1,9 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using ScaleTrackAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using ScaleTrackAPI.DTOs.Issue;
-using ScaleTrackAPI.Errors;
-using ScaleTrackAPI.Messages;
+using ScaleTrackAPI.Services.IssueService;
 
 namespace ScaleTrackAPI.Controllers
 {

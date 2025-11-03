@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using ScaleTrackAPI.DTOs.Tag;
-using ScaleTrackAPI.Services;
 using Microsoft.AspNetCore.Authorization;
+using ScaleTrackAPI.Services.TagService;
 
 namespace ScaleTrackAPI.Controllers
 {
