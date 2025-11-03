@@ -8,26 +8,23 @@ using ScaleTrackAPI.Database;
 using System.Security.Claims;
 using ScaleTrackAPI.Models;
 
-namespace ScaleTrackAPI.Services
+namespace ScaleTrackAPI.Services.IssueTagService
 {
     public class IssueTagService : TransactionalServiceBase
     {
         private readonly IIssueTagRepository _repo;
-        private readonly IIssueRepository _issueRepo;
-        private readonly IValidator<IssueTagRequest> _validator;
-        private readonly AuditHelper _auditHelper;
+        private readonly IssueTagBusinessRules _businessRules;
+        private readonly IssueTagAuditTrail _auditHelper;
 
         public IssueTagService(
             AppDbContext context,
             IIssueTagRepository repo,
-            IIssueRepository issueRepo,
-            IValidator<IssueTagRequest> validator,
-            AuditHelper auditHelper
+            IssueTagBusinessRules businessRules,
+            IssueTagAuditTrail auditHelper
         ) : base(context)
         {
             _repo = repo;
-            _issueRepo = issueRepo;
-            _validator = validator;
+            _businessRules = businessRules;
             _auditHelper = auditHelper;
         }
 
@@ -40,37 +37,21 @@ namespace ScaleTrackAPI.Services
         public async Task<(IssueTagResponse? Response, AppError? Error, string? Message)> AddTag(
             int issueId,
             IssueTagRequest request,
-            ClaimsPrincipal userClaims
-        )
+            ClaimsPrincipal userClaims)
         {
             return await ExecuteInTransactionAsync<(IssueTagResponse? Response, AppError? Error, string? Message)>(async () =>
             {
-                var issue = await _issueRepo.GetById(issueId);
-                if (issue == null)
-                    return (null, AppError.NotFound(ErrorMessages.Get("Issue:IssueNotFound", issueId)), null);
-
-                var validation = _validator.Validate(request);
+                var validation = await _businessRules.ValidateAddAsync(issueId, request);
                 if (!validation.IsValid)
-                    return (null, AppError.Validation(string.Join("; ", validation.Errors)), null);
-
-                var existing = await _repo.Get(issueId, request.TagId);
-                if (existing != null)
-                    return (null, AppError.Conflict(ErrorMessages.Get("Tag:TagAlreadyExists", request.TagId)), null);
+                    return (null, validation.Error, null);
 
                 var issueTag = IssueTagMapper.ToModel(issueId, request);
                 var created = await _repo.Add(issueTag);
+
                 if (created == null)
                     return (null, AppError.Unexpected(ErrorMessages.Get("General:UnexpectedError")), null);
 
-                // 🔹 Record audit trail
-                await _auditHelper.RecordAuditAsync(
-                    action: "Created",
-                    entityId: issueId,          // For composite keys, could also combine IssueId+TagId
-                    oldValue: null!,
-                    newValue: created,
-                    entityName: nameof(IssueTag),
-                    user: userClaims
-                );
+                await _auditHelper.RecordCreate(created, userClaims);
 
                 var successMessage = SuccessMessages.Get("Tag:TagCreated");
                 return (IssueTagMapper.ToResponse(created), null, successMessage);
@@ -80,26 +61,18 @@ namespace ScaleTrackAPI.Services
         public async Task<(AppError? Error, string? Message)> RemoveTag(
             int issueId,
             int tagId,
-            ClaimsPrincipal userClaims
-        )
+            ClaimsPrincipal userClaims)
         {
             return await ExecuteInTransactionAsync<(AppError? Error, string? Message)>(async () =>
             {
-                var issueTag = await _repo.Get(issueId, tagId);
-                if (issueTag == null)
-                    return (AppError.NotFound(ErrorMessages.Get("Tag:TagNotFound", tagId)), null);
+                var validation = await _businessRules.ValidateRemoveAsync(issueId, tagId);
+                if (!validation.Exists)
+                    return (validation.Error, null);
 
+                var issueTag = await _repo.Get(issueId, tagId);
                 await _repo.Delete(issueTag);
 
-                // 🔹 Record audit trail
-                await _auditHelper.RecordAuditAsync(
-                    action: "Deleted",
-                    entityId: issueId, // or combine IssueId+TagId
-                    oldValue: issueTag,
-                    newValue: null!,
-                    entityName: nameof(IssueTag),
-                    user: userClaims
-                );
+                await _auditHelper.RecordDelete(issueTag, userClaims);
 
                 var successMessage = SuccessMessages.Get("Tag:TagDeleted");
                 return (null, successMessage);

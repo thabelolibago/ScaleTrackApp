@@ -11,6 +11,7 @@ namespace ScaleTrackAPI.Repositories
         public async Task<List<AuditTrail>> GetAll()
         {
             return await _context.AuditTrails
+                .Where(a => !a.IsDeleted) // filter out soft-deleted
                 .Include(a => a.ChangedByUser)
                 .Include(a => a.ApprovedByUser)
                 .OrderByDescending(a => a.ChangedAt)
@@ -20,6 +21,7 @@ namespace ScaleTrackAPI.Repositories
         public async Task<AuditTrail?> GetById(int id)
         {
             return await _context.AuditTrails
+                .Where(a => !a.IsDeleted) // filter out soft-deleted
                 .Include(a => a.ChangedByUser)
                 .Include(a => a.ApprovedByUser)
                 .FirstOrDefaultAsync(a => a.Id == id);
@@ -40,12 +42,6 @@ namespace ScaleTrackAPI.Repositories
             _context.Entry(existing).CurrentValues.SetValues(audit);
             await _context.SaveChangesAsync();
             return existing;
-        }
-
-        public async Task Delete(AuditTrail audit)
-        {
-            _context.AuditTrails.Remove(audit);
-            await _context.SaveChangesAsync();
         }
     }
 }

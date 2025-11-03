@@ -29,7 +29,7 @@ namespace ScaleTrackAPI.Mappers
                 EntityName = audit.EntityName,
                 EntityId = audit.EntityId,
                 Action = audit.Action,
-                ChangedBy = audit.ChangedBy,
+                ChangedBy = audit.ChangedBy ?? 0,
                 ChangedAt = audit.ChangedAt,
                 Changes = audit.Changes,
                 ApprovedBy = audit.ApprovedBy,
@@ -37,21 +37,32 @@ namespace ScaleTrackAPI.Mappers
             };
         }
 
-        // New helper method for services
+        /// <summary>
+        /// Helper method used by services to create an AuditTrail record.
+        /// Automatically serializes old/new values with proper JSON options.
+        /// </summary>
         public static AuditTrail CreateAudit<T>(
             string action,
             int entityId,
-            T oldValue,
-            T newValue,
+            T? oldValue,
+            T? newValue,
             ClaimsPrincipal user,
             string? entityName = null)
         {
-            var userId = user.GetUserId() ?? 0;
+            // Safely extract user ID — fallback to 0 if null or unauthenticated
+            int userId = user.GetUserId() ?? 0;
 
             var changes = new
             {
                 Old = oldValue,
                 New = newValue
+            };
+
+            var jsonOptions = new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
+                ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles
             };
 
             return new AuditTrail
@@ -60,11 +71,12 @@ namespace ScaleTrackAPI.Mappers
                 EntityId = entityId,
                 Action = action,
                 ChangedBy = userId,
-                Changes = JsonSerializer.Serialize(changes),
+                Changes = JsonSerializer.Serialize(changes, jsonOptions),
                 ChangedAt = DateTime.UtcNow
             };
         }
     }
 }
+
 
 

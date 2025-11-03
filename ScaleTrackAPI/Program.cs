@@ -25,7 +25,9 @@ builder.Services
     .AddRepositories()                         // Repositories
     .AddValidators()                           // Validators
     .AddHelpers()                              // Helper classes
-    .AddDomainServices();                       // Application services
+    .AddDomainServices()                     // Application services
+    .AddAuditTrails()                      // Audit trail helpers
+    .AddBusinessRules();                     // Business rules
 
 // Add controllers and Swagger
 builder.Services.AddControllers()

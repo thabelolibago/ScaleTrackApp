@@ -8,26 +8,26 @@ using ScaleTrackAPI.Database;
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
 
-namespace ScaleTrackAPI.Services
+namespace ScaleTrackAPI.Services.IssueService
 {
     public class IssueService : TransactionalServiceBase
     {
         private readonly IIssueRepository _repo;
-        private readonly IValidator<IssueRequest> _validator;
         private readonly AppDbContext _context;
-        private readonly AuditHelper _auditHelper;
+        private readonly IssueBusinessRules _rules;
+        private readonly IssueAuditTrail _auditTrail;
 
         public IssueService(
             AppDbContext context,
             IIssueRepository repo,
-            IValidator<IssueRequest> validator,
-            AuditHelper auditHelper
+            IssueBusinessRules rules,
+            IssueAuditTrail auditTrail
         ) : base(context)
         {
             _repo = repo;
-            _validator = validator;
+            _rules = rules;
+            _auditTrail = auditTrail;
             _context = context;
-            _auditHelper = auditHelper;
         }
 
         public async Task<List<IssueResponse>> GetAllIssues()
@@ -49,9 +49,9 @@ namespace ScaleTrackAPI.Services
         {
             return await ExecuteInTransactionAsync<(IssueResponse? Response, AppError? Error)>(async () =>
             {
-                var validation = _validator.Validate(request);
-                if (!validation.IsValid)
-                    return (null, AppError.Validation(string.Join("; ", validation.Errors)));
+                var validationError = _rules.ValidateRequest(request);
+                if (validationError != null)
+                    return (null, validationError);
 
                 var userIdClaim = userClaims.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (userIdClaim == null)
@@ -71,15 +71,8 @@ namespace ScaleTrackAPI.Services
                 if (fullIssue == null)
                     return (null, AppError.Unexpected("General:UnexpectedError"));
 
-                var audit = AuditTrailMapper.CreateAudit(
-                    action: "Created",
-                    entityId: fullIssue.Id,
-                    oldValue: null,
-                    newValue: fullIssue,
-                    user: userClaims
-                );
-                _context.AuditTrails.Add(audit);
-                await _context.SaveChangesAsync();
+                // --- AUDIT ---
+                await _auditTrail.RecordCreate(fullIssue, userClaims);
 
                 return (IssueMapper.ToResponse(fullIssue), null);
             });
@@ -89,9 +82,9 @@ namespace ScaleTrackAPI.Services
         {
             return await ExecuteInTransactionAsync<(IssueResponse? Response, AppError? Error)>(async () =>
             {
-                var validation = _validator.Validate(request);
-                if (!validation.IsValid)
-                    return (null, AppError.Validation(string.Join("; ", validation.Errors)));
+                var validationError = _rules.ValidateRequest(request);
+                if (validationError != null)
+                    return (null, validationError);
 
                 var issue = await _repo.GetById(id);
                 if (issue == null)
@@ -113,15 +106,8 @@ namespace ScaleTrackAPI.Services
                     .Include(i => i.CreatedBy)
                     .FirstOrDefaultAsync(i => i.Id == updated.Id);
 
-                var audit = AuditTrailMapper.CreateAudit(
-                    action: "Updated",
-                    entityId: fullIssue!.Id,
-                    oldValue: oldIssue,
-                    newValue: fullIssue,
-                    user: userClaims
-                );
-                _context.AuditTrails.Add(audit);
-                await _context.SaveChangesAsync();
+                // --- AUDIT ---
+                await _auditTrail.RecordUpdate(oldIssue, fullIssue!, userClaims);
 
                 return (IssueMapper.ToResponse(fullIssue), null);
             });
@@ -131,8 +117,9 @@ namespace ScaleTrackAPI.Services
         {
             return await ExecuteInTransactionAsync<(IssueResponse? Response, AppError? Error, string? Message)>(async () =>
             {
-                if (!Enum.IsDefined(typeof(IssueStatus), statusIndex))
-                    return (null, AppError.Validation(ErrorMessages.Get("Issue:InvalidIssueStatus", statusIndex)), null);
+                var validationError = _rules.ValidateStatus(statusIndex);
+                if (validationError != null)
+                    return (null, validationError, null);
 
                 var status = (IssueStatus)statusIndex;
 
@@ -154,15 +141,7 @@ namespace ScaleTrackAPI.Services
                     .FirstOrDefaultAsync(i => i.Id == updated.Id);
 
                 // --- AUDIT ---
-                var audit = AuditTrailMapper.CreateAudit(
-                    action: "Status Updated",
-                    entityId: fullIssue!.Id,
-                    oldValue: oldIssue,
-                    newValue: fullIssue,
-                    user: userClaims
-                );
-                _context.AuditTrails.Add(audit);
-                await _context.SaveChangesAsync();
+                await _auditTrail.RecordStatusUpdate(oldIssue, fullIssue!, userClaims);
 
                 var successMessage = SuccessMessages.Get("Issue:IssueUpdated");
                 return (IssueMapper.ToResponse(fullIssue), null, successMessage);
@@ -179,15 +158,8 @@ namespace ScaleTrackAPI.Services
 
                 await _repo.DeleteIssue(id);
 
-                var audit = AuditTrailMapper.CreateAudit(
-                    action: "Deleted",
-                    entityId: issue.Id,
-                    oldValue: issue,
-                    newValue: null,
-                    user: userClaims
-                );
-                _context.AuditTrails.Add(audit);
-                await _context.SaveChangesAsync();
+                // --- AUDIT ---
+                await _auditTrail.RecordDelete(issue, userClaims);
 
                 return (null, SuccessMessages.Get("Issue:IssueDeleted"));
             });

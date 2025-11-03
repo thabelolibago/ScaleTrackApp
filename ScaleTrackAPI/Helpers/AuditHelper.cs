@@ -18,36 +18,36 @@ namespace ScaleTrackAPI.Helpers
         public async Task RecordAuditAsync<T>(
             string action,
             int entityId,
-            T oldValue,
-            T newValue,
+            T? oldValue,
+            T? newValue,
             string entityName,
             ClaimsPrincipal user)
         {
-            var userId = user.GetUserId() ?? 0;
-
-            var changes = new
-            {
-                Old = oldValue,
-                New = newValue
-            };
+            var userId = user.GetUserId();
+            if (userId == null || userId == 0)
+                throw new InvalidOperationException("Cannot record audit: user ID is invalid.");
 
             var audit = new AuditTrail
             {
                 EntityName = entityName,
                 EntityId = entityId,
                 Action = action,
-                ChangedBy = userId,
-                Changes = JsonSerializer.Serialize(changes, new JsonSerializerOptions
-                {
-                    WriteIndented = true,
-                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
-                    ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles
-                }),
+                ChangedBy = userId.Value,
+                Changes = JsonSerializer.Serialize(
+                    new { Old = oldValue, New = newValue },
+                    new JsonSerializerOptions
+                    {
+                        WriteIndented = true,
+                        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
+                        ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles
+                    }),
                 ChangedAt = DateTime.UtcNow
             };
 
             _context.AuditTrails.Add(audit);
             await _context.SaveChangesAsync();
+
         }
     }
 }
+
