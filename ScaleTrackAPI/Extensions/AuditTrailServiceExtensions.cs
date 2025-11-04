@@ -1,3 +1,4 @@
+using ScaleTrackAPI.Services;
 using ScaleTrackAPI.Services.Auth;
 using ScaleTrackAPI.Services.CommentService;
 using ScaleTrackAPI.Services.IssueService;
@@ -17,6 +18,7 @@ namespace ScaleTrackAPI.Extensions
             services.AddScoped<IssueTagAuditTrail>();
             services.AddScoped<TagAuditTrail>();
             services.AddScoped<UserAuditTrail>();
+            services.AddScoped<PasswordResetAuditTrail>();
             return services;
         }
     }
