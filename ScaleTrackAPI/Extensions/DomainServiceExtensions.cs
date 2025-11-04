@@ -21,7 +21,10 @@ namespace ScaleTrackAPI.Extensions
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<MenuService>();
-
+            services.AddScoped<PasswordResetService>();
+            services.AddScoped<PasswordResetTokenService>();
+            services.AddScoped<UserPasswordService>();
+            
             return services;
         }
     }

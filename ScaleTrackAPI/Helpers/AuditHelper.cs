@@ -3,6 +3,7 @@ using ScaleTrackAPI.Models;
 using System.Text.Json;
 using System.Security.Claims;
 using ScaleTrackAPI.Extensions;
+using Microsoft.EntityFrameworkCore;
 
 namespace ScaleTrackAPI.Helpers
 {
@@ -15,24 +16,39 @@ namespace ScaleTrackAPI.Helpers
             _context = context;
         }
 
+        /// <summary>
+        /// Records an audit trail. Can use either a logged-in user (ClaimsPrincipal) or an email for unauthenticated actions.
+        /// </summary>
         public async Task RecordAuditAsync<T>(
             string action,
             int entityId,
             T? oldValue,
             T? newValue,
             string entityName,
-            ClaimsPrincipal user)
+            object changedBy // ClaimsPrincipal OR string email
+        )
         {
-            var userId = user.GetUserId();
-            if (userId == null || userId == 0)
-                throw new InvalidOperationException("Cannot record audit: user ID is invalid.");
+            int? userId = null;
+            User? changedUser = null;
+
+            switch (changedBy)
+            {
+                case ClaimsPrincipal principal:
+                    userId = principal.GetUserId();
+                    break;
+                case string email:
+                    changedUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+                    userId = changedUser?.Id;
+                    break;
+            }
 
             var audit = new AuditTrail
             {
                 EntityName = entityName,
                 EntityId = entityId,
                 Action = action,
-                ChangedBy = userId.Value,
+                ChangedBy = userId,
+                ChangedByUser = changedUser,
                 Changes = JsonSerializer.Serialize(
                     new { Old = oldValue, New = newValue },
                     new JsonSerializerOptions
@@ -46,8 +62,8 @@ namespace ScaleTrackAPI.Helpers
 
             _context.AuditTrails.Add(audit);
             await _context.SaveChangesAsync();
-
         }
     }
 }
+
 

@@ -17,6 +17,9 @@ namespace ScaleTrackAPI.Database
         public DbSet<AuditTrail> AuditTrails { get; set; }
         public DbSet<MenuItem> MenuItems { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<PasswordResetToken> PasswordResetTokens { get; set; } = null!;
+
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

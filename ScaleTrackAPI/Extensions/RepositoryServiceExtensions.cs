@@ -1,4 +1,5 @@
 using ScaleTrackAPI.Repositories;
+using ScaleTrackAPI.Repositories.Implementations;
 
 namespace ScaleTrackAPI.Extensions
 {
@@ -14,6 +15,7 @@ namespace ScaleTrackAPI.Extensions
             services.AddScoped<IAuditTrailRepository, AuditTrailRepository>();
             services.AddScoped<IMenuRepository, MenuRepository>();
             services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+            services.AddScoped<IPasswordResetRepository, PasswordResetRepository>();
 
             return services;
         }

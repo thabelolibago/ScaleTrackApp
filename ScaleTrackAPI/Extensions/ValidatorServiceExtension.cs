@@ -6,6 +6,7 @@ using ScaleTrackAPI.DTOs.User;
 using ScaleTrackAPI.DTOs.AuditTrail;
 using ScaleTrackAPI.Validators;
 using ScaleTrackAPI.Helpers;
+using Microsoft.AspNetCore.Identity.Data;
 
 namespace ScaleTrackAPI.Extensions
 {

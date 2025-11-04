@@ -8,6 +8,7 @@ namespace ScaleTrackAPI.Extensions
         {
             services.AddSingleton<PasswordHelper>();
             services.AddScoped<AuditHelper>();
+            services.AddScoped<EmailHelper>();
             
             return services;
         }
