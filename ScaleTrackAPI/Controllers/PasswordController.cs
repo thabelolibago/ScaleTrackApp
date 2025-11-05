@@ -12,13 +12,13 @@ namespace ScaleTrackAPI.Controllers
 {
     [ApiController]
     [Route("api/v1/password")]
-    public class PasswordResetController : ControllerBase
+    public class PasswordController : ControllerBase
     {
         private readonly ForgotPasswordService _forgotPasswordService;
         private readonly ResetPasswordService _resetPasswordService;
         private readonly ChangePasswordService _changePasswordService;
 
-        public PasswordResetController(
+        public PasswordController(
             ForgotPasswordService forgotPasswordService,
             ResetPasswordService resetPasswordService,
             ChangePasswordService changePasswordService)
