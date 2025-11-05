@@ -11,25 +11,44 @@ using ScaleTrackAPI.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Initialize error and success messages
+// ==========================================================
+// ✅ Load configuration from Config/ folder
+// ==========================================================
+builder.Configuration
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("Config/appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile($"Config/appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
+    .AddJsonFile("Config/success-messages.json", optional: true, reloadOnChange: true)
+    .AddJsonFile("Config/error-messages.json", optional: true, reloadOnChange: true)
+    .AddEnvironmentVariables();
+
+// ==========================================================
+// ✅ Load environment variables from .env file (for secrets)
+// ==========================================================
+Env.Load();
+
+// ==========================================================
+// ✅ Initialize error and success messages
+// ==========================================================
 ErrorMessages.Init(builder.Configuration);
 SuccessMessages.Init(builder.Configuration);
 
-// Load environment variables from .env
-Env.Load();
-
-// ✅ Add modular services
+// ==========================================================
+// ✅ Register application services
+// ==========================================================
 builder.Services
-    .AddDatabase(builder.Configuration)        // DbContext
-    .AddIdentityServices(builder.Configuration) // Identity + JWT
-    .AddRepositories()                         // Repositories
-    .AddValidators()                           // Validators
-    .AddHelpers()                              // Helper classes
-    .AddDomainServices()                     // Application services
-    .AddAuditTrails()                      // Audit trail helpers
-    .AddBusinessRules();                     // Business rules
+    .AddDatabase(builder.Configuration)          // DbContext
+    .AddIdentityServices(builder.Configuration)  // Identity + JWT
+    .AddRepositories()                           // Repositories
+    .AddValidators()                             // Validators
+    .AddHelpers()                                // Helper classes
+    .AddDomainServices()                         // Business/application services
+    .AddAuditTrails()                            // Audit trail helpers
+    .AddBusinessRules();                         // Business rules
 
-// Add controllers and Swagger
+// ==========================================================
+// ✅ Configure Controllers & JSON options
+// ==========================================================
 builder.Services.AddControllers()
     .AddJsonOptions(opt =>
     {
@@ -37,8 +56,9 @@ builder.Services.AddControllers()
         opt.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
     });
 
-
-
+// ==========================================================
+// ✅ Swagger setup with JWT auth
+// ==========================================================
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -51,24 +71,33 @@ builder.Services.AddSwaggerGen(c =>
         In = Microsoft.OpenApi.Models.ParameterLocation.Header,
         Description = "Enter 'Bearer <token>'"
     });
+
     c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
     {
         {
             new Microsoft.OpenApi.Models.OpenApiSecurityScheme
             {
-                Reference = new Microsoft.OpenApi.Models.OpenApiReference { Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme, Id = "Bearer" }
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference 
+                { 
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme, 
+                    Id = "Bearer" 
+                }
             },
             new string[] {}
         }
     });
 });
 
-// ✅ Disable automatic claim type mapping AFTER services are registered
+// ==========================================================
+// ✅ JWT claim mapping fix
+// ==========================================================
 JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
 var app = builder.Build();
 
-// Apply migrations and seed initial data
+// ==========================================================
+// ✅ Apply migrations & seed data on startup
+// ==========================================================
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -79,7 +108,9 @@ using (var scope = app.Services.CreateScope())
     await SeedData.Initialize(context, userManager, builder.Configuration);
 }
 
-// Middleware
+// ==========================================================
+// ✅ Middleware pipeline
+// ==========================================================
 app.UseMiddleware<ExceptionMiddleware>();
 
 app.UseSwagger();
@@ -88,12 +119,9 @@ app.UseSwaggerUI();
 // Optional HTTPS redirect
 // app.UseHttpsRedirection();
 
-// Authentication & Authorization
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Map controllers
 app.MapControllers();
 
-// Run app
 app.Run();

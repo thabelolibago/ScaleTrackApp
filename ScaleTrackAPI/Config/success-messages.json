@@ -1,0 +1,35 @@
+{
+  "SuccessMessages": {
+    "Issue": {
+      "IssueCreated": "Issue created successfully.",
+      "IssueUpdated": "Issue updated successfully.",
+      "IssueDeleted": "Issue deleted successfully."
+    },
+
+    "Comment": {
+      "CommentAdded": "Comment added successfully.",
+      "CommentDeleted": "Comment deleted successfully."
+    },
+
+    "Tag": {
+      "TagCreated": "Tag created successfully.",
+      "TagDeleted": "Tag deleted successfully."
+    },
+
+    "User": {
+      "UserRegistered": "User registered successfully.",
+      "UserUpdated": "User updated successfully.",
+      "UserDeleted": "User deleted successfully."
+    },
+
+    "Login": {
+      "LoginSuccessful": "Login successful.",
+      "TokenRefreshed": "Token refreshed successfully."
+    },
+
+    "PasswordReset": {
+      "ResetLinkSent": "Password reset link has been sent to your email.",
+      "ResetSuccessful": "Your password has been reset successfully."
+    }
+  }
+}
