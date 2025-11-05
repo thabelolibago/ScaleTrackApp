@@ -1,32 +1,22 @@
-using ScaleTrackAPI.DTOs.Auth;
 using ScaleTrackAPI.Errors;
 using ScaleTrackAPI.Models;
 using ScaleTrackAPI.Repositories;
 
-namespace ScaleTrackAPI.Services
+namespace ScaleTrackAPI.Services.ResetPassword
 {
-    public class PasswordResetBusinessRules
+    public class ResetPasswordBusinessRules
     {
         private readonly IPasswordResetRepository _repo;
 
-        public PasswordResetBusinessRules(IPasswordResetRepository repo)
+        public ResetPasswordBusinessRules(IPasswordResetRepository repo)
         {
             _repo = repo;
         }
 
-        public async Task<(bool IsValid, AppError? Error, User? User)> ValidateForgotPasswordAsync(string email)
-        {
-            if (string.IsNullOrWhiteSpace(email))
-                return (false, AppError.Validation("Email is required."), null);
-
-            var user = await _repo.GetUserByEmailAsync(email);
-            if (user == null)
-                return (false, AppError.NotFound("User not found."), null);
-
-            return (true, null, user);
-        }
-
-        public async Task<(bool IsValid, AppError? Error, PasswordResetToken? Token)> ValidateResetPasswordAsync(
+        /// <summary>
+        /// Validates a password reset token and new password.
+        /// </summary>
+        public async Task<(bool IsValid, AppError? Error, PasswordResetToken? Token)> ValidateResetAsync(
             string token, string newPassword, string confirmPassword)
         {
             if (string.IsNullOrWhiteSpace(token))
@@ -49,4 +39,5 @@ namespace ScaleTrackAPI.Services
         }
     }
 }
+
 
