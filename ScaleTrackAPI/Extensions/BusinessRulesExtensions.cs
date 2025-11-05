@@ -5,6 +5,8 @@ using ScaleTrackAPI.Services.TagService;
 using ScaleTrackAPI.Services.UserService;
 using ScaleTrackAPI.Services.Auth;
 using ScaleTrackAPI.Services;
+using ScaleTrackAPI.Services.ResetPassword;
+using ScaleTrackAPI.Services.ForgotPassword;
 
 namespace ScaleTrackAPI.Extensions
 {
@@ -18,7 +20,9 @@ namespace ScaleTrackAPI.Extensions
             services.AddScoped<IssueTagBusinessRules>();
             services.AddScoped<TagBusinessRules>();
             services.AddScoped<UserBusinessRules>();
-            services.AddScoped<PasswordResetBusinessRules>();
+            services.AddScoped<ChangePasswordBusinessRules>();
+            services.AddScoped<ForgotPasswordBusinessRules>();
+            services.AddScoped<ResetPasswordBusinessRules>();
 
             return services;
         }

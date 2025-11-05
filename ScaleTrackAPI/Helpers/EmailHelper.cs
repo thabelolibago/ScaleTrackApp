@@ -86,11 +86,54 @@ namespace ScaleTrackAPI.Helpers
         public string BuildPasswordResetEmail(User user, string resetLink)
         {
             return $@"
-                   <h3>Password Reset Request</h3>
-                   <p>Hi {user.FirstName} {user.LastName},</p>
-                   <p>Click the link below to reset your password:</p>
-                   <a href='{resetLink}'>Reset Password</a>
-                   <p>This link expires in 1 hour.</p>";
+    <!DOCTYPE html>
+    <html lang='en'>
+    <head>
+      <meta charset='UTF-8'>
+      <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+      <title>Password Reset</title>
+    </head>
+    <body style='font-family: Arial, sans-serif; background-color: #f4f4f4; margin:0; padding:0;'>
+      <table width='100%' cellpadding='0' cellspacing='0' style='background-color: #f4f4f4; padding: 20px 0;'>
+        <tr>
+          <td align='center'>
+            <table width='600' cellpadding='0' cellspacing='0' style='background-color: #ffffff; border-radius: 8px; overflow: hidden;'>
+              
+              <!-- Header -->
+              <tr>
+                <td style='background-color: #0078D4; padding: 20px; text-align: center; color: #ffffff; font-size: 24px; font-weight: bold;'>
+                  Reset Your Password
+                </td>
+              </tr>
+              
+              <!-- Body -->
+              <tr>
+                <td style='padding: 30px; color: #333333; font-size: 16px; line-height: 1.5;'>
+                  <p>Hi {user.FirstName} {user.LastName},</p>
+                  <p>We received a request to reset your password. Click the button below to reset it:</p>
+                  <p style='text-align: center; margin: 30px 0;'>
+                    <a href='{resetLink}' style='background-color: #0078D4; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;'>Reset Password</a>
+                  </p>
+                  <p>If you did not request a password reset, please ignore this email.</p>
+                  <p>This link will expire in <strong>1 hour</strong>.</p>
+                </td>
+              </tr>
+
+              <!-- Footer -->
+              <tr>
+                <td style='background-color: #f4f4f4; padding: 20px; text-align: center; color: #888888; font-size: 12px;'>
+                  &copy; {DateTime.UtcNow.Year} ScaleTrack Technologies (Pty) Ltd. All rights reserved.<br>
+                  7 Mellis Rd, Rivonia, Sandton, South Africa
+                </td>
+              </tr>
+
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+    ";
         }
     }
 }
