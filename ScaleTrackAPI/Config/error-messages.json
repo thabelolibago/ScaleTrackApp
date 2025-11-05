@@ -1,64 +1,4 @@
 {
-  "Frontend": {
-    "BaseUrl": "http://localhost:4200"
-  },
-
-  "Logging": {
-    "LogLevel": {
-      "Default": "Information",
-      "Microsoft.AspNetCore": "Warning"
-    }
-  },
-  "AllowedHosts": "*",
-
-  "Jwt": {
-    "Key": "", 
-    "Issuer": "ScaleTrack",
-    "Audience": "ScaleTrackClients",
-    "AccessTokenMinutes": 60
-  },
-
-  "Security": {
-    "PasswordPepper": ""
-  },
-
-  "SmtpSettings": {
-    "Host": "smtp.gmail.com",
-    "Port": "587",
-    "Username": "",
-    "Password": "",
-    "FromEmail": ""
-  },
-
-  "SuccessMessages": {
-    "Issue": {
-      "IssueCreated": "Issue created successfully.",
-      "IssueUpdated": "Issue updated successfully.",
-      "IssueDeleted": "Issue deleted successfully."
-    },
-    "Comment": {
-      "CommentAdded": "Comment added successfully.",
-      "CommentDeleted": "Comment deleted successfully."
-    },
-    "Tag": {
-      "TagCreated": "Tag created successfully.",
-      "TagDeleted": "Tag deleted successfully."
-    },
-    "User": {
-      "UserRegistered": "User registered successfully.",
-      "UserUpdated": "User updated successfully.",
-      "UserDeleted": "User deleted successfully."
-    },
-    "Login": {
-      "LoginSuccessful": "Login successful.",
-      "TokenRefreshed": "Token refreshed successfully."
-    },
-    "PasswordReset": {
-      "ResetLinkSent": "Password reset link has been sent to your email.",
-      "ResetSuccessful": "Your password has been reset successfully."
-    }
-  },
-
   "ErrorMessages": {
     "Auth": {
       "InvalidCredentials": "Invalid email or password.",
@@ -66,43 +6,51 @@
       "InvalidRefreshToken": "Invalid or expired refresh token.",
       "InvalidRequest": "Invalid request payload."
     },
+
     "Audit": {
       "AuditNotFound": "Audit trail with id {0} not found.",
       "AuditCreationFailed": "Failed to create audit trail.",
       "AuditApprovalFailed": "Failed to approve audit trail."
     },
+
     "Issue": {
       "IssueNotFound": "Issue with id {0} not found.",
       "InvalidIssueType": "Invalid issue type provided.",
       "IssueConflict": "An issue with the same title already exists.",
       "InvalidIssueStatus": "Invalid IssueStatus index: {0}"
     },
+
     "Comment": {
       "CommentNotFound": "Comment with id {0} not found.",
       "IssueForCommentNotFound": "Cannot add comment. Issue with id {0} not found.",
       "FailedToDeleteComment": "You cannot delete someone else's comment."
     },
+
     "Tag": {
       "TagNotFound": "Tag with id {0} not found.",
       "TagAlreadyExists": "Tag '{0}' already exists."
     },
+
     "User": {
       "UserNotFound": "User with id {0} not found.",
       "EmailAlreadyExists": "User with email '{0}' already exists.",
       "InvalidRole": "Invalid user role specified.",
       "FailedToDeleteUser": "Failed to delete user."
     },
+
     "Token": {
       "InvalidCredentials": "Invalid email or password.",
       "TokenExpired": "Your session has expired. Please login again.",
       "InvalidToken": "Invalid refresh token provided."
     },
+
     "Validation": {
       "ValidationFailed": "One or more validation errors occurred.",
       "RequestNotNull": "The request body cannot be null.",
       "PasswordsDoNotMatch": "Passwords do not match.",
       "PasswordTooShort": "Password must be at least 8 characters long."
     },
+
     "General": {
       "NotFound": "The requested resource could not be found.",
       "Conflict": "The request could not be completed due to a conflict.",
