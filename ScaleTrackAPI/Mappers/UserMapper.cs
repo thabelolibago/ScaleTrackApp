@@ -19,7 +19,7 @@ namespace ScaleTrackAPI.Mappers
             };
         }
 
-        public static User ToModel(UserRequest request)
+        public static User ToModel(UserRequest request, RegisterRequest register)
         {
             return new User
             {
@@ -27,7 +27,10 @@ namespace ScaleTrackAPI.Mappers
                 LastName = request.LastName,
                 Email = request.Email,
                 UserName = request.Email,
-                Role = request.Role
+                Role = request.Role,
+                PhoneNumber = register.PhoneNumber,
+                Bio = register.Bio,
+                ProfilePictureUrl = register.ProfilePictureUrl
             };
         }
 
