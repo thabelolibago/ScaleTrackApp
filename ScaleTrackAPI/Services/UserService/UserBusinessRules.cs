@@ -34,17 +34,20 @@ namespace ScaleTrackAPI.Services.UserService
                 return (AppError.Validation("Request cannot be null"), null);
 
             var userRequest = UserMapper.FromRegisterRequest(request);
+
             var validationResult = _validator.Validate(userRequest);
             if (!validationResult.IsValid)
-                 return (AppError.Validation(string.Join("; ", validationResult.Errors)), null);
+                return (AppError.Validation(string.Join("; ", validationResult.Errors)), null);
 
             if (await _repo.GetByEmail(request.Email) != null)
                 return (AppError.Conflict($"Email '{request.Email}' already exists"), null);
 
-            var user = UserMapper.ToModel(userRequest);
-            var passwordWithPepper = _passwordHelper.WithPepper(request.Password);
+            var user = UserMapper.ToModel(userRequest, request);
+            user.Role = user.Role == 0 ? UserRole.Viewer : user.Role;
 
-            var result = await _userManager.CreateAsync(user, passwordWithPepper);
+            var password = _passwordHelper.WithPepper(request.Password);
+            var result = await _userManager.CreateAsync(user, password);
+
             if (!result.Succeeded)
             {
                 var errors = string.Join("; ", result.Errors.Select(e => e.Description));
@@ -62,8 +65,9 @@ namespace ScaleTrackAPI.Services.UserService
                 return (AppError.Validation("Invalid role"), null, null);
 
             var parsedRole = (UserRole)roleIndex;
+            if (user.Role == parsedRole)
+                return (AppError.Validation("User already has this role"), null, null);
 
-            // Proper copy of old user for audit
             var oldUser = new User
             {
                 Id = user.Id,
@@ -97,8 +101,8 @@ namespace ScaleTrackAPI.Services.UserService
             var identityUser = await _userManager.FindByIdAsync(user.Id.ToString());
             if (identityUser != null)
             {
-                var res = await _userManager.DeleteAsync(identityUser);
-                if (!res.Succeeded)
+                var result = await _userManager.DeleteAsync(identityUser);
+                if (!result.Succeeded)
                     return (AppError.Conflict("Failed to delete user"), null);
             }
             else

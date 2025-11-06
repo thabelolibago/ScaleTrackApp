@@ -13,7 +13,7 @@ using ScaleTrackAPI.Services.Auth;
 
 namespace ScaleTrackAPI.Services.UserService
 {
-    public class UserService(ITokenService tokenService ,IUserRepository repo, UserManager<User> userManager, IValidator<UserRequest> validator, PasswordHelper passwordHelper, UserAuditTrail auditHelper)
+    public class UserService(ITokenService tokenService, IUserRepository repo, UserManager<User> userManager, IValidator<UserRequest> validator, PasswordHelper passwordHelper, UserAuditTrail auditHelper)
     {
         private readonly IUserRepository _repo = repo;
         private readonly UserManager<User> _userManager = userManager;
@@ -36,18 +36,22 @@ namespace ScaleTrackAPI.Services.UserService
             if (request == null)
                 return (null, AppError.Validation(ErrorMessages.Get("Validation:RequestNotNull")));
 
-            var userRequest = UserMapper.FromRegisterRequest(request);
-
-            var validationError = _validator.ToAppError(userRequest);
+            // ✅ Validate input
+            var validationError = BusinessRules.RegisterValidator.Validate(request);
             if (validationError != null)
                 return (null, validationError);
 
+            // ✅ Check if email already exists
             if (await _repo.GetByEmail(request.Email) != null)
                 return (null, AppError.Conflict(ErrorMessages.Get("User:EmailAlreadyExists", request.Email)));
 
-            var user = UserMapper.ToModel(userRequest);
+            // ✅ Map DTOs
+            var userRequest = UserMapper.FromRegisterRequest(request);
+            var user = UserMapper.ToModel(userRequest, request);
+
             var passwordWithPepper = _passwordHelper.WithPepper(request.Password);
 
+            // ✅ Create user in Identity
             var result = await _userManager.CreateAsync(user, passwordWithPepper);
             if (!result.Succeeded)
             {
@@ -55,17 +59,21 @@ namespace ScaleTrackAPI.Services.UserService
                 return (null, AppError.Validation(errors));
             }
 
+            // ✅ Assign Viewer role
             await _userManager.AddClaimAsync(user, new Claim(ClaimTypes.Role, user.Role.ToString()));
 
+            // ✅ Issue tokens
             var (accessToken, refreshToken) = await _tokenService.CreateTokensAsync(user);
 
-            var actor = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            // ✅ Record in audit trail
+            var actor = new ClaimsPrincipal(new ClaimsIdentity(new[]
             {
         new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
-            }, "Registration"));
+    }, "Registration"));
 
             await _auditHelper.RecordCreate(user, actor);
 
+            // ✅ Return response
             var response = new RegisterResponse
             {
                 User = UserMapper.ToResponse(user),
@@ -76,6 +84,7 @@ namespace ScaleTrackAPI.Services.UserService
 
             return (response, null);
         }
+
 
         public async Task<(AppError? Error, string Message)> UpdateUserRole(int id, int roleIndex, ClaimsPrincipal userClaims)
         {
@@ -133,7 +142,7 @@ namespace ScaleTrackAPI.Services.UserService
             {
                 await _repo.Delete(user);
             }
-            
+
             await _auditHelper.RecordDelete(user, userClaims);
 
             return (null, SuccessMessages.Get("User:UserDeleted"));

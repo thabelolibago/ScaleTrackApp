@@ -48,7 +48,9 @@
       "ValidationFailed": "One or more validation errors occurred.",
       "RequestNotNull": "The request body cannot be null.",
       "PasswordsDoNotMatch": "Passwords do not match.",
-      "PasswordTooShort": "Password must be at least 8 characters long."
+      "PasswordTooShort": "Password must be at least 8 characters long.",
+      "EmailsDoNotMatch": "Email and confirmation email do not match.",
+      "WeakPassword": "Password must include uppercase, lowercase, number, and symbol."
     },
 
     "General": {
