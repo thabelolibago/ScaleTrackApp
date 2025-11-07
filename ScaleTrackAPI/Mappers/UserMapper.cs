@@ -14,6 +14,8 @@ namespace ScaleTrackAPI.Mappers
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 Email = user.Email ?? string.Empty,
+                ProfilePictureUrl = user.ProfilePictureUrl,
+                Bio = user.Bio,
                 Role = user.Role
             };
         }

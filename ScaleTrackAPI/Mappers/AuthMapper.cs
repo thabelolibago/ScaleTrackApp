@@ -23,11 +23,12 @@ namespace ScaleTrackAPI.Mappers
                     FirstName = user.FirstName,
                     LastName = user.LastName,
                     Email = user.Email ?? "",
+                    ProfilePictureUrl = user.ProfilePictureUrl,
+                    Bio = user.Bio,
                     Role = user.Role
                 }
             };
         }
-
 
         /// <summary>
         /// Creates a new RefreshToken entity for storing in the database.
