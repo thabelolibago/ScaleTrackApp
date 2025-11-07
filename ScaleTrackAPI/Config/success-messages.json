@@ -30,6 +30,11 @@
     "PasswordReset": {
       "ResetLinkSent": "Password reset link has been sent to your email.",
       "ResetSuccessful": "Your password has been reset successfully."
+    },
+
+    "Email" : {
+      "EmailVerified" : "Email verified successfully",
+      "EmailNotVerified" : "Please verify your email before logging in."
     }
   }
 }

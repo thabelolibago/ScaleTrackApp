@@ -5,22 +5,40 @@ using ScaleTrackAPI.Mappers;
 using ScaleTrackAPI.Repositories;
 using ScaleTrackAPI.Models;
 using ScaleTrackAPI.Helpers;
-using ScaleTrackAPI.Extensions;
 using System.Security.Claims;
-using ScaleTrackAPI.Messages;
 using ScaleTrackAPI.Services.Auth;
-
+using ScaleTrackAPI.Messages;
 
 namespace ScaleTrackAPI.Services.UserService
 {
-    public class UserService(ITokenService tokenService, IUserRepository repo, UserManager<User> userManager, IValidator<UserRequest> validator, PasswordHelper passwordHelper, UserAuditTrail auditHelper)
+    public class UserService
     {
-        private readonly IUserRepository _repo = repo;
-        private readonly UserManager<User> _userManager = userManager;
-        private readonly IValidator<UserRequest> _validator = validator;
-        private readonly PasswordHelper _passwordHelper = passwordHelper;
-        private readonly UserAuditTrail _auditHelper = auditHelper;
-        private readonly ITokenService _tokenService = tokenService;
+        private readonly IUserRepository _repo;
+        private readonly UserManager<User> _userManager;
+        private readonly IValidator<UserRequest> _validator;
+        private readonly PasswordHelper _passwordHelper;
+        private readonly UserAuditTrail _auditHelper;
+        private readonly ITokenService _tokenService;
+        private readonly AuthBusinessRules _authRules;
+
+        public UserService(
+            IUserRepository repo,
+            UserManager<User> userManager,
+            IValidator<UserRequest> validator,
+            PasswordHelper passwordHelper,
+            UserAuditTrail auditHelper,
+            ITokenService tokenService,
+            AuthBusinessRules authRules
+        )
+        {
+            _repo = repo;
+            _userManager = userManager;
+            _validator = validator;
+            _passwordHelper = passwordHelper;
+            _auditHelper = auditHelper;
+            _tokenService = tokenService;
+            _authRules = authRules;
+        }
 
         public async Task<List<UserResponse>> GetAllUsers()
             => (await _repo.GetAll()).Select(UserMapper.ToResponse).ToList();
@@ -31,27 +49,27 @@ namespace ScaleTrackAPI.Services.UserService
             if (u == null) return (null, AppError.NotFound(ErrorMessages.Get("User:UserNotFound", id)));
             return (UserMapper.ToResponse(u), null);
         }
-        public async Task<(RegisterResponse? Response, AppError? Error)> RegisterUser(RegisterRequest request)
+
+        public async Task<(RegisterResponse? Response, AppError? Error)> RegisterUser(RegisterRequest request, string baseUrl)
         {
             if (request == null)
                 return (null, AppError.Validation(ErrorMessages.Get("Validation:RequestNotNull")));
 
-            // ✅ Validate input
-            var validationError = BusinessRules.RegisterValidator.Validate(request);
-            if (validationError != null)
-                return (null, validationError);
+            var existingUser = await _repo.GetByEmail(request.Email);
+            if (existingUser != null)
+            {
+                if (!existingUser.IsEmailVerified)
+                    return (null, AppError.Conflict(ErrorMessages.Get("Validation:EmailsDoNotMatch")));
 
-            // ✅ Check if email already exists
-            if (await _repo.GetByEmail(request.Email) != null)
-                return (null, AppError.Conflict(ErrorMessages.Get("User:EmailAlreadyExists", request.Email)));
+                return (null, AppError.Conflict(ErrorMessages.Get("User:EmailAlreadyExists")));
+            }
 
-            // ✅ Map DTOs
-            var userRequest = UserMapper.FromRegisterRequest(request);
-            var user = UserMapper.ToModel(userRequest, request);
+            var user = UserMapper.ToModel(request);
+            user.Role = UserRole.Viewer;
+            user.IsEmailVerified = false;
+            user.RequiresEmailVerification = true;
 
             var passwordWithPepper = _passwordHelper.WithPepper(request.Password);
-
-            // ✅ Create user in Identity
             var result = await _userManager.CreateAsync(user, passwordWithPepper);
             if (!result.Succeeded)
             {
@@ -59,32 +77,49 @@ namespace ScaleTrackAPI.Services.UserService
                 return (null, AppError.Validation(errors));
             }
 
-            // ✅ Assign Viewer role
             await _userManager.AddClaimAsync(user, new Claim(ClaimTypes.Role, user.Role.ToString()));
 
-            // ✅ Issue tokens
+            await _authRules.GenerateEmailVerificationAsync(user, baseUrl);
+
             var (accessToken, refreshToken) = await _tokenService.CreateTokensAsync(user);
 
-            // ✅ Record in audit trail
             var actor = new ClaimsPrincipal(new ClaimsIdentity(new[]
             {
-        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
-    }, "Registration"));
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
+            }, "Registration"));
 
             await _auditHelper.RecordCreate(user, actor);
 
-            // ✅ Return response
-            var response = new RegisterResponse
+            return (new RegisterResponse
             {
                 User = UserMapper.ToResponse(user),
                 AccessToken = accessToken,
-                RefreshToken = refreshToken,
-                Message = SuccessMessages.Get("User:UserRegistered")
-            };
-
-            return (response, null);
+                RefreshToken = refreshToken
+            }, null);
         }
 
+        public async Task<(bool Success, AppError? Error)> VerifyEmail(string token)
+        {
+            var result = await _authRules.VerifyEmailAsync(token);
+
+            if (!result.Success)
+                return (false, AppError.Validation(ErrorMessages.Get("Auth:InvalidToken")));
+
+            return (true, null);
+        }
+
+        public async Task<AppError?> ResendVerificationEmail(string email, string baseUrl)
+        {
+            var user = await _repo.GetByEmail(email);
+            if (user == null)
+                return AppError.NotFound(ErrorMessages.Get("User:UserNotFound", email));
+
+            if (user.IsEmailVerified)
+                return AppError.Conflict(ErrorMessages.Get("User:EmailAlreadyExits"));
+
+            await _authRules.GenerateEmailVerificationAsync(user, baseUrl);
+            return null;
+        }
 
         public async Task<(AppError? Error, string Message)> UpdateUserRole(int id, int roleIndex, ClaimsPrincipal userClaims)
         {
@@ -92,10 +127,9 @@ namespace ScaleTrackAPI.Services.UserService
                 return (AppError.Validation(ErrorMessages.Get("User:InvalidRole")), string.Empty);
 
             var parsedRole = (UserRole)roleIndex;
-
             var user = await _repo.GetById(id);
             if (user == null)
-                return (AppError.NotFound(ErrorMessages.Get("User:UserNotFound", id)), string.Empty);
+                return (AppError.NotFound(ErrorMessages.Get("User:UserNotFound")), string.Empty);
 
             var oldUser = new User
             {
@@ -110,7 +144,7 @@ namespace ScaleTrackAPI.Services.UserService
             user.Role = parsedRole;
             var result = await _userManager.UpdateAsync(user);
             if (!result.Succeeded)
-                return (AppError.Conflict(ErrorMessages.Get("User:FailedToUpdateUser")), string.Empty);
+                return (AppError.Conflict(ErrorMessages.Get("User:UserRoleNotUpdated")), string.Empty);
 
             await _auditHelper.RecordUpdate(oldUser, user, userClaims);
 
@@ -120,17 +154,7 @@ namespace ScaleTrackAPI.Services.UserService
         public async Task<(AppError? Error, string? Message)> DeleteUser(int id, ClaimsPrincipal userClaims)
         {
             var user = await _repo.GetById(id);
-            if (user == null) return (AppError.NotFound(ErrorMessages.Get("User:UserNotFound", id)), null);
-
-            var oldUser = new
-            {
-                user.Id,
-                user.Email,
-                user.UserName,
-                user.FirstName,
-                user.LastName,
-                Role = user.Role
-            };
+            if (user == null) return (AppError.NotFound(ErrorMessages.Get("User:UserNotFound")), null);
 
             var identityUser = await _userManager.FindByIdAsync(id.ToString());
             if (identityUser != null)
@@ -147,6 +171,5 @@ namespace ScaleTrackAPI.Services.UserService
 
             return (null, SuccessMessages.Get("User:UserDeleted"));
         }
-
     }
 }
