@@ -32,14 +32,17 @@
     },
 
     "User": {
-      "UserNotFound": "User with id {0} not found.",
+      "UserNotFound": "User not found.",
       "EmailAlreadyExists": "User with email '{0}' already exists.",
       "InvalidRole": "Invalid user role specified.",
+      "RoleAlreadyAssignedToUser": "User already has this role",
+      "UserRoleNotUpdated": "Failed to update user",
       "FailedToDeleteUser": "Failed to delete user."
     },
 
     "Token": {
       "InvalidCredentials": "Invalid email or password.",
+      "TokenRequired" : "Refresh token is required.",
       "TokenExpired": "Your session has expired. Please login again.",
       "InvalidToken": "Invalid refresh token provided."
     },
@@ -47,10 +50,13 @@
     "Validation": {
       "ValidationFailed": "One or more validation errors occurred.",
       "RequestNotNull": "The request body cannot be null.",
+      "EmailRequired": "Email is required",
+      "PasswordRequired": "Password is required",
       "PasswordsDoNotMatch": "Passwords do not match.",
       "PasswordTooShort": "Password must be at least 8 characters long.",
       "EmailsDoNotMatch": "Email and confirmation email do not match.",
-      "WeakPassword": "Password must include uppercase, lowercase, number, and symbol."
+      "WeakPassword": "Password must include uppercase, lowercase, number, and symbol.",
+      "InvalidEmailVerificationRequest": "This account does not require email verification."
     },
 
     "General": {
@@ -58,6 +64,11 @@
       "Conflict": "The request could not be completed due to a conflict.",
       "UnexpectedError": "An unexpected error occurred. Please try again later.",
       "Unauthorized": "You are not authorized to perform this action."
+    },
+
+    "Email" : {
+      "EmailVerified" : "Email verified successfully",
+      "EmailNotVerified" : "Please verify your email before logging in."
     }
   }
 }

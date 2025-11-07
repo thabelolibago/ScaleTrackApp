@@ -8,18 +8,16 @@ namespace ScaleTrackAPI.Mappers
     {
         public static UserResponse ToResponse(User user)
         {
-            var role = user.Role; 
             return new UserResponse
             {
                 Id = user.Id,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 Email = user.Email ?? string.Empty,
-                Role = role
+                Role = user.Role
             };
         }
-
-        public static User ToModel(UserRequest request, RegisterRequest register)
+        public static User ToModel(RegisterRequest request)
         {
             return new User
             {
@@ -27,10 +25,10 @@ namespace ScaleTrackAPI.Mappers
                 LastName = request.LastName,
                 Email = request.Email,
                 UserName = request.Email,
-                Role = request.Role,
-                PhoneNumber = register.PhoneNumber,
-                Bio = register.Bio,
-                ProfilePictureUrl = register.ProfilePictureUrl
+                Role = UserRole.Viewer,
+                PhoneNumber = request.PhoneNumber,
+                Bio = request.Bio,
+                ProfilePictureUrl = request.ProfilePictureUrl
             };
         }
 

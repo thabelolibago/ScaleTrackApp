@@ -30,10 +30,22 @@ namespace ScaleTrackAPI.Repositories
             return user;
         }
 
+        public async Task<User> Update(User user)
+        {
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+            return user;
+        }
+
         public async Task Delete(User user)
         {
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<User?> GetByVerificationToken(string token)
+        {
+            return await _context.Users.FirstOrDefaultAsync(u => u.EmailVerificationToken == token);
         }
     }
 }
