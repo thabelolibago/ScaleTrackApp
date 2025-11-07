@@ -30,6 +30,7 @@ namespace ScaleTrackAPI.Extensions
             services.AddScoped<ForgotPasswordService>();
             services.AddScoped<ResetPasswordService>();
             services.AddScoped<UserPasswordService>();
+            services.AddScoped<EditProfileService>();
             
             return services;
         }

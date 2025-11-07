@@ -29,6 +29,8 @@ namespace ScaleTrackAPI.Controllers
             return Ok(user);
         }
 
+        
+
         [HttpPatch("{id:int}/role")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateRole(int id, [FromBody] int roleIndex)

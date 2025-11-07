@@ -20,6 +20,7 @@ namespace ScaleTrackAPI.Extensions
             services.AddScoped<TagAuditTrail>();
             services.AddScoped<UserAuditTrail>();
             services.AddScoped<PasswordAuditTrail>();
+            services.AddScoped<EditProfileAuditTrail>();
             return services;
         }
     }
