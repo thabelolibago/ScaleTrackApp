@@ -13,6 +13,7 @@ using ScaleTrackAPI.Application.Features.Issues.Services.IssueService;
 using ScaleTrackAPI.Application.Features.IssueTags.Services.IssueTagService;
 using ScaleTrackAPI.Application.Features.Menu.Services.MenuService;
 using ScaleTrackAPI.Application.Features.Profile.EditProfile.Services.EditProfileService;
+using ScaleTrackAPI.Application.Features.RegisterUser;
 using ScaleTrackAPI.Application.Features.Tags.Services.TagService;
 using ScaleTrackAPI.Application.Features.Users.Services.UserService;
 
@@ -37,6 +38,7 @@ namespace ScaleTrackAPI.Shared.Extensions
             services.AddScoped<ResetPasswordService>();
             services.AddScoped<UserPasswordService>();
             services.AddScoped<EditProfileService>();
+            services.AddScoped<RegisterUserService>();
             
             return services;
         }

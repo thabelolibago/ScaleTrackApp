@@ -16,18 +16,7 @@ namespace ScaleTrackAPI.Application.Features.Users.BusinessRules.UserAuditTrail
             _auditHelper = auditHelper;
         }
 
-        public async Task RecordCreate(User user, ClaimsPrincipal userClaims)
-        {
-            await _auditHelper.RecordAuditAsync
-            (
-                "Created",
-                user.Id,
-                null,
-                user,
-                EntityName,
-                userClaims
-            );
-        }
+        
 
         public async Task RecordUpdate(User oldUser, User updated, ClaimsPrincipal userClaims)
         {

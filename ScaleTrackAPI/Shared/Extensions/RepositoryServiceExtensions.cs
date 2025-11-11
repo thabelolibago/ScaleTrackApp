@@ -1,4 +1,3 @@
-
 using ScaleTrackAPI.Infrastructure.Repositories.Implementations.AuditTrailRepository;
 using ScaleTrackAPI.Infrastructure.Repositories.Implementations.CommentRepository;
 using ScaleTrackAPI.Infrastructure.Repositories.Implementations.IssueRepository;
@@ -6,6 +5,7 @@ using ScaleTrackAPI.Infrastructure.Repositories.Implementations.IssueTagReposito
 using ScaleTrackAPI.Infrastructure.Repositories.Implementations.Menu;
 using ScaleTrackAPI.Infrastructure.Repositories.Implementations.PasswordResetRepository;
 using ScaleTrackAPI.Infrastructure.Repositories.Implementations.RefreshTokenRepository;
+using ScaleTrackAPI.Infrastructure.Repositories.Implementations.RegisterUser;
 using ScaleTrackAPI.Infrastructure.Repositories.Implementations.TagRepository;
 using ScaleTrackAPI.Infrastructure.Repositories.Implementations.UserRepository;
 using ScaleTrackAPI.Infrastructure.Repositories.Interfaces.IAuditTrailRepository;
@@ -17,6 +17,7 @@ using ScaleTrackAPI.Infrastructure.Repositories.Interfaces.IPasswordResetReposit
 using ScaleTrackAPI.Infrastructure.Repositories.Interfaces.IRefreshTokenRepository;
 using ScaleTrackAPI.Infrastructure.Repositories.Interfaces.ITagRepository;
 using ScaleTrackAPI.Infrastructure.Repositories.Interfaces.IUserRepository;
+using ScaleTrackAPI.Infrastructure.Repositories.Interfaces.RegisterUser;
 
 namespace ScaleTrackAPI.Shared.Extensions
 {
@@ -33,6 +34,7 @@ namespace ScaleTrackAPI.Shared.Extensions
             services.AddScoped<IMenuRepository, MenuRepository>();
             services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
             services.AddScoped<IPasswordResetRepository, PasswordResetRepository>();
+            services.AddScoped<IRegisterUserRepository, RegisterUserRepository>();
 
             return services;
         }

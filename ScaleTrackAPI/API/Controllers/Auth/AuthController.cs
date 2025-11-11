@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using ScaleTrackAPI.Application.Features.Auth.DTOs.Login;
 using ScaleTrackAPI.Application.Features.Auth.DTOs.Token;
+using ScaleTrackAPI.Application.Features.Auth.RegisterUser.DTOs;
 using ScaleTrackAPI.Application.Features.Auth.Services;
-using ScaleTrackAPI.Application.Features.Users.DTOs;
-using ScaleTrackAPI.Application.Features.Users.Services.UserService;
+using ScaleTrackAPI.Application.Features.RegisterUser;
 
 namespace ScaleTrackAPI.Controllers.Auth.AuthController
 {
@@ -12,10 +12,10 @@ namespace ScaleTrackAPI.Controllers.Auth.AuthController
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
-        private readonly UserService _userService;
+        private readonly RegisterUserService _userService;
         private readonly IConfiguration _config;
 
-        public AuthController(IAuthService authService, UserService userService, IConfiguration config)
+        public AuthController(IAuthService authService, RegisterUserService userService, IConfiguration config)
         {
             _authService = authService;
             _userService = userService;
@@ -33,7 +33,7 @@ namespace ScaleTrackAPI.Controllers.Auth.AuthController
 
         // 🔹 Register
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterRequest request)
+        public async Task<IActionResult> Register([FromBody] RegisterUserRequest request)
         {
             string baseUrl = _config["App:FrontendUrl"] ?? "http://localhost:4200";
             var (response, error) = await _userService.RegisterUser(request, baseUrl);
