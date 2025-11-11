@@ -2,12 +2,16 @@ using System.IdentityModel.Tokens.Jwt;
 using DotNetEnv;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using ScaleTrackAPI.Database;
-using ScaleTrackAPI.Errors;
+using ScaleTrackAPI.API.Middleware.ExceptionMiddleware;
+using ScaleTrackAPI.Application.Errors.ErrorMessages;
+using ScaleTrackAPI.Application.Messages.SuccessMessages;
+using ScaleTrackAPI.Domain.Entities;
 using ScaleTrackAPI.Extensions;
-using ScaleTrackAPI.Messages;
-using ScaleTrackAPI.Middleware;
-using ScaleTrackAPI.Models;
+using ScaleTrackAPI.Infrastructure.Data;
+using ScaleTrackAPI.Infrastructure.Data.SeedData;
+using ScaleTrackAPI.Shared.Extensions;
+
+
 
 var builder = WebApplication.CreateBuilder(args);
 
