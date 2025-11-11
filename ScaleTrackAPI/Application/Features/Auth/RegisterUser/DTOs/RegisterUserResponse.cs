@@ -1,6 +1,8 @@
-namespace ScaleTrackAPI.Application.Features.Users.DTOs
+using ScaleTrackAPI.Application.Features.Users.DTOs;
+
+namespace ScaleTrackAPI.Application.Features.Auth.RegisterUser.DTOs
 {
-    public class RegisterResponse
+    public class RegisterUserResponse
     {
         public UserResponse User { get; set; } = null!;
         public string AccessToken { get; set; } = null!;
