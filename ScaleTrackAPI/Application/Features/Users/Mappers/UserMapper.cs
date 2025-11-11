@@ -21,30 +21,5 @@ namespace ScaleTrackAPI.Application.Features.Users.Mappers.UserMapper
                 Role = user.Role
             };
         }
-        public static User ToModel(RegisterRequest request)
-        {
-            return new User
-            {
-                FirstName = request.FirstName,
-                LastName = request.LastName,
-                Email = request.Email,
-                UserName = request.Email,
-                Role = UserRole.Viewer,
-                PhoneNumber = request.PhoneNumber,
-                Bio = request.Bio,
-                ProfilePictureUrl = request.ProfilePictureUrl
-            };
-        }
-
-        public static UserRequest FromRegisterRequest(RegisterRequest request)
-        {
-            return new UserRequest
-            {
-                FirstName = request.FirstName,
-                LastName = request.LastName,
-                Email = request.Email,
-                Role = UserRole.Viewer
-            };
-        }
     }
 }

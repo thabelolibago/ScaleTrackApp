@@ -1,6 +1,5 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.Data;
 using ScaleTrackAPI.Application.Errors.AppError;
 using ScaleTrackAPI.Application.Errors.ErrorMessages;
 using ScaleTrackAPI.Application.Features.Auth.BusinessRules.AuthBusinessRules;
@@ -14,7 +13,6 @@ using ScaleTrackAPI.Domain.Enums;
 using ScaleTrackAPI.Infrastructure.Repositories.Interfaces.IUserRepository;
 using ScaleTrackAPI.Shared.Helpers;
 using ScaleTrackAPI.Shared.Validators;
-using RegisterRequest = ScaleTrackAPI.Application.Features.Users.DTOs.RegisterRequest;
 
 namespace ScaleTrackAPI.Application.Features.Users.Services.UserService
 {
@@ -55,54 +53,6 @@ namespace ScaleTrackAPI.Application.Features.Users.Services.UserService
             var u = await _repo.GetById(id);
             if (u == null) return (null, AppError.NotFound(ErrorMessages.Get("User:UserNotFound", id)));
             return (UserMapper.ToResponse(u), null);
-        }
-
-        public async Task<(RegisterResponse? Response, AppError? Error)> RegisterUser(RegisterRequest request, string baseUrl)
-        {
-            if (request == null)
-                return (null, AppError.Validation(ErrorMessages.Get("Validation:RequestNotNull")));
-
-            var existingUser = await _repo.GetByEmail(request.Email);
-            if (existingUser != null)
-            {
-                if (!existingUser.IsEmailVerified)
-                    return (null, AppError.Conflict(ErrorMessages.Get("Validation:EmailsDoNotMatch")));
-
-                return (null, AppError.Conflict(ErrorMessages.Get("User:EmailAlreadyExists")));
-            }
-
-            var user = UserMapper.ToModel(request);
-            user.Role = UserRole.Viewer;
-            user.IsEmailVerified = false;
-            user.RequiresEmailVerification = true;
-
-            var passwordWithPepper = _passwordHelper.WithPepper(request.Password);
-            var result = await _userManager.CreateAsync(user, passwordWithPepper);
-            if (!result.Succeeded)
-            {
-                var errors = string.Join("; ", result.Errors.Select(e => e.Description));
-                return (null, AppError.Validation(errors));
-            }
-
-            await _userManager.AddClaimAsync(user, new Claim(ClaimTypes.Role, user.Role.ToString()));
-
-            await _authRules.GenerateEmailVerificationAsync(user, baseUrl);
-
-            var (accessToken, refreshToken) = await _tokenService.CreateTokensAsync(user);
-
-            var actor = new ClaimsPrincipal(new ClaimsIdentity(new[]
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
-            }, "Registration"));
-
-            await _auditHelper.RecordCreate(user, actor);
-
-            return (new RegisterResponse
-            {
-                User = UserMapper.ToResponse(user),
-                AccessToken = accessToken,
-                RefreshToken = refreshToken
-            }, null);
         }
 
         public async Task<(bool Success, AppError? Error)> VerifyEmail(string token)

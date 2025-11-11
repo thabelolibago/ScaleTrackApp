@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.Data;
 using ScaleTrackAPI.Application.Features.AuditTrails.DTOs;
 using ScaleTrackAPI.Application.Features.AuditTrails.Validators;
+using ScaleTrackAPI.Application.Features.Auth.RegisterUser;
+using ScaleTrackAPI.Application.Features.Auth.RegisterUser.DTOs;
 using ScaleTrackAPI.Application.Features.Comments.DTOs;
 using ScaleTrackAPI.Application.Features.Comments.Validators;
 using ScaleTrackAPI.Application.Features.Issues.DTOs;
@@ -25,6 +28,7 @@ namespace ScaleTrackAPI.Shared.Extensions
             services.AddSingleton<IValidator<TagRequest>, TagValidator>();
             services.AddSingleton<IValidator<UserRequest>, UserValidator>();
             services.AddSingleton<IValidator<AuditTrailRequest>, AuditTrailValidator>();
+            services.AddSingleton<IValidator<RegisterUserRequest>, RegisterUserValidator>();
 
             return services;
         }

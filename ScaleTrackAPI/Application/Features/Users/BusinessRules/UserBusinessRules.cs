@@ -35,54 +35,7 @@ namespace ScaleTrackAPI.Application.Features.Users.BusinessRules.UserBusinessRul
             _emailHelper = emailHelper;
         }
 
-        public async Task<(AppError? Error, User? User, bool VerificationPending, DateTime? ExpiresAt)> RegisterUserRules(RegisterRequest request, string baseUrl)
-        {
-            if (request == null)
-                return (AppError.Validation(ErrorMessages.Get("Request:RequestNotNull")), null, false, null);
-
-            var user = UserMapper.ToModel(request);
-
-            if (request.IsLegacyUser)
-            {
-                user.IsEmailVerified = true;
-                user.RequiresEmailVerification = false;
-            }
-            else
-            {
-                user.IsEmailVerified = false;
-                user.RequiresEmailVerification = true;
-            }
-
-            var password = _passwordHelper.WithPepper(request.Password);
-            var result = await _userManager.CreateAsync(user, password);
-            if (!result.Succeeded)
-            {
-                var errors = string.Join("; ", result.Errors.Select(e => e.Description));
-                return (AppError.Validation(errors), null, false, null);
-            }
-
-            await _userManager.AddClaimAsync(user, new Claim(ClaimTypes.Role, user.Role.ToString()));
-
-            DateTime? verificationExpiresAt = null;
-            bool verificationPending = false;
-
-            if (!user.IsEmailVerified && user.RequiresEmailVerification)
-            {
-                verificationExpiresAt = DateTime.UtcNow.AddHours(24);
-                user.EmailVerificationToken = Guid.NewGuid().ToString("N");
-                user.EmailVerificationTokenExpiry = verificationExpiresAt;
-
-                await _repo.Update(user);
-
-                string verifyLink = $"{baseUrl}/verify-email?token={user.EmailVerificationToken}";
-                string emailBody = _emailHelper.BuildEmailVerificationEmail(user, verifyLink);
-                await _emailHelper.SendEmailAsync(user.Email!, "Verify Your Email", emailBody);
-
-                verificationPending = true;
-            }
-
-            return (null, user, verificationPending, verificationExpiresAt);
-        }
+        
         
         public async Task<(AppError? Error, User? OldUser, User? UpdatedUser)> UpdateUserRoleRules(User user, int roleIndex)
         {
