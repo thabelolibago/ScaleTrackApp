@@ -1,10 +1,12 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
+using ScaleTrackAPI.Application.Errors.ErrorMessages;
 using ScaleTrackAPI.Application.Features.Auth.DTOs.Password;
 using ScaleTrackAPI.Application.Features.Auth.Mappers.Password.PasswordResetMapper;
 using ScaleTrackAPI.Application.Features.Auth.Password.ChangePassword.BusinessRules.ChangePasswordBusinessRules;
 using ScaleTrackAPI.Application.Features.Auth.Password.Shared.PasswordAuditTrail;
 using ScaleTrackAPI.Application.Features.Auth.Password.Shared.UserPasswordService;
+using ScaleTrackAPI.Application.Messages.SuccessMessages;
 using ScaleTrackAPI.Domain.Entities;
 using ScaleTrackAPI.Infrastructure.Data;
 using ScaleTrackAPI.Infrastructure.Services.Base;
@@ -40,12 +42,12 @@ namespace ScaleTrackAPI.Application.Features.Auth.Password.ChangePassword.Servic
         {
             var user = await _userManager.FindByIdAsync(userId.ToString());
             if (user == null)
-                return PasswordResetMapper.ToResponse(false, "User not found.");
+                return PasswordResetMapper.ToResponse(false, ErrorMessages.Get("User:UserNotFound", userId));
 
             // ✅ Manually verify current password with pepper
             var isCurrentValid = _passwordHelper.VerifyWithPepper(request.CurrentPassword, user.PasswordHash);
             if (!isCurrentValid)
-                return PasswordResetMapper.ToResponse(false, "Incorrect password.");
+                return PasswordResetMapper.ToResponse(false, ErrorMessages.Get("ChangePassword:IncorrectPassword"));
 
             // Validate new password
             var validation = await _businessRules.ValidateChangePasswordAsync(
@@ -59,7 +61,7 @@ namespace ScaleTrackAPI.Application.Features.Auth.Password.ChangePassword.Servic
             // Audit the change
             await _auditTrail.RecordPasswordAction(user.Id, currentUser, user.Email, "Change");
 
-            return PasswordResetMapper.ToResponse(true, "Password changed successfully.");
+            return PasswordResetMapper.ToResponse(true, SuccessMessages.Get("ChangePassword:PasswordChangedSuccessfully"));
         }
     }
 }

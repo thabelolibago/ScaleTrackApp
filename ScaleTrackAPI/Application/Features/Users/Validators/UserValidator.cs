@@ -1,3 +1,4 @@
+using ScaleTrackAPI.Application.Errors.ErrorMessages;
 using ScaleTrackAPI.Application.Features.Users.DTOs;
 using ScaleTrackAPI.Domain.Enums;
 using ScaleTrackAPI.Shared.Validators;
@@ -11,16 +12,16 @@ namespace ScaleTrackAPI.Features.Users.Validators
             var errors = new List<string>();
 
             if (request == null)
-                return ValidationResult.Failure("User request cannot be null.");
+                return ValidationResult.Failure(ErrorMessages.Get("User:RequestNull"));
 
             if (string.IsNullOrWhiteSpace(request.FirstName))
-                errors.Add("First name is required.");
+                errors.Add(ErrorMessages.Get("User:FirstNameRequired"));
 
             if (string.IsNullOrWhiteSpace(request.LastName))
-                errors.Add("Last name is required.");
+                errors.Add(ErrorMessages.Get("User:LastNameRequired"));
 
             if (string.IsNullOrWhiteSpace(request.Email))
-                errors.Add("Email is required.");
+                errors.Add(ErrorMessages.Get("User:EmailRequired"));
 
             if (!Enum.IsDefined(typeof(UserRole), request.Role))
                 errors.Add($"Role must be one of: {string.Join(", ", Enum.GetNames<UserRole>())}");

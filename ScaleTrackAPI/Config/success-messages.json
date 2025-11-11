@@ -32,9 +32,25 @@
       "ResetSuccessful": "Your password has been reset successfully."
     },
 
-    "Email" : {
-      "EmailVerified" : "Email verified successfully",
-      "EmailNotVerified" : "Please verify your email before logging in."
+    "Email": {
+      "EmailVerified": "Email verified successfully",
+      "EmailNotVerified": "Please verify your email before logging in."
+    },
+
+    "Profile": {
+      "ProfileUpdated": "Profile updated successfully."
+    },
+
+    "ChangePassword": {
+      "PasswordChanged": "Password changed successfully."
+    },
+
+    "ForgotPassword": {
+      "PasswordResetEmailSent": "Password reset email sent successfully."
+    },
+
+    "ResetPassword": {
+      "PasswordResetSuccessful": "Password has been reset successfully."
     }
   }
 }

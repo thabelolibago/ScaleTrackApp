@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using ScaleTrackAPI.Application.Errors.ErrorMessages;
 using ScaleTrackAPI.Domain.Entities;
 using ScaleTrackAPI.Shared.Helpers;
 
@@ -24,14 +25,14 @@ namespace ScaleTrackAPI.Application.Features.Auth.Password.Shared.UserPasswordSe
             if (!removeResult.Succeeded)
             {
                 var errors = string.Join("; ", removeResult.Errors.Select(e => e.Description));
-                throw new Exception($"Failed to remove old password: {errors}");
+                throw new Exception(ErrorMessages.Get("UserPassword:RemoveFailed", errors));
             }
 
             var addResult = await _userManager.AddPasswordAsync(user, pepperedPassword);
             if (!addResult.Succeeded)
             {
                 var errors = string.Join("; ", addResult.Errors.Select(e => e.Description));
-                throw new Exception($"Failed to set new password: {errors}");
+                throw new Exception(ErrorMessages.Get("UserPassword:AddFailed", errors));
             }
         }
     }

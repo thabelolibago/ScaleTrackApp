@@ -1,11 +1,13 @@
 using System.Security.Claims;
 using ScaleTrackAPI.Application.Errors.AppError;
+using ScaleTrackAPI.Application.Errors.ErrorMessages;
 using ScaleTrackAPI.Application.Features.Auth.DTOs.Password;
 using ScaleTrackAPI.Application.Features.Auth.Password.ChangePassword.Services.ChangePasswordService;
 using ScaleTrackAPI.Application.Features.Profile.EditProfile.BusinessRules.EditProfileAuditTrail;
 using ScaleTrackAPI.Application.Features.Profile.EditProfile.DTOs;
 using ScaleTrackAPI.Application.Features.Profile.EditProfile.Mappers.EditProfileMapper;
 using ScaleTrackAPI.Application.Features.Users.Mappers.UserMapper;
+using ScaleTrackAPI.Application.Messages.SuccessMessages;
 using ScaleTrackAPI.Domain.Entities;
 using ScaleTrackAPI.Infrastructure.Repositories.Interfaces.IUserRepository;
 
@@ -32,7 +34,7 @@ namespace ScaleTrackAPI.Application.Features.Profile.EditProfile.Services.EditPr
         {
             var user = await _userRepo.GetById(userId);
             if (user == null)
-                return (null, AppError.NotFound("User not found."));
+                return (null, AppError.NotFound(ErrorMessages.Get("User:UserNotFound", userId)));
 
             var oldUser = new User
             {
@@ -68,7 +70,7 @@ namespace ScaleTrackAPI.Application.Features.Profile.EditProfile.Services.EditPr
             return (new EditProfileResponse
             {
                 User = UserMapper.ToResponse(user),
-                Message = updated ? "Profile updated successfully." : null
+                Message = updated ? SuccessMessages.Get("Profile:ProfileUpdated") : null
             }, null);
         }
     }

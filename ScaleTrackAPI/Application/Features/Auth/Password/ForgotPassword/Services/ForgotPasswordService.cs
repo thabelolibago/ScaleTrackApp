@@ -3,6 +3,7 @@ using ScaleTrackAPI.Application.Features.Auth.Mappers.Password.PasswordResetMapp
 using ScaleTrackAPI.Application.Features.Auth.Password.ForgotPassword.BusinessRules.ForgotPasswordBusinessRules;
 using ScaleTrackAPI.Application.Features.Auth.Password.Shared.PasswordAuditTrail;
 using ScaleTrackAPI.Application.Features.Auth.Password.Shared.PasswordResetTokenService;
+using ScaleTrackAPI.Application.Messages.SuccessMessages;
 using ScaleTrackAPI.Infrastructure.Data;
 using ScaleTrackAPI.Infrastructure.Services.Base;
 using ScaleTrackAPI.Shared.Helpers;
@@ -49,7 +50,7 @@ namespace ScaleTrackAPI.Application.Features.Auth.Password.ForgotPassword.Servic
 
             await _auditTrail.RecordResetLinkSent(user.Email);
 
-            return PasswordResetMapper.ToResponse(true, "Reset link sent successfully.");
+            return PasswordResetMapper.ToResponse(true, SuccessMessages.Get("ForgotPassword:PasswordResetEmailSent"));
         }
     }
 }

@@ -1,11 +1,13 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity.Data;
+using ScaleTrackAPI.Application.Errors.ErrorMessages;
 using ScaleTrackAPI.Application.Features.Auth.DTOs.Password;
 using ScaleTrackAPI.Application.Features.Auth.Mappers.Password.PasswordResetMapper;
 using ScaleTrackAPI.Application.Features.Auth.Password.ResetPassword.BusinessRules.ResetPasswordBusinessRules;
 using ScaleTrackAPI.Application.Features.Auth.Password.Shared.PasswordAuditTrail;
 using ScaleTrackAPI.Application.Features.Auth.Password.Shared.PasswordResetTokenService;
 using ScaleTrackAPI.Application.Features.Auth.Password.Shared.UserPasswordService;
+using ScaleTrackAPI.Application.Messages.SuccessMessages;
 using ScaleTrackAPI.Infrastructure.Data;
 using ScaleTrackAPI.Infrastructure.Services.Base;
 using ResetPasswordRequest = ScaleTrackAPI.Application.Features.Auth.DTOs.Password.ResetPasswordRequest;
@@ -66,7 +68,7 @@ namespace ScaleTrackAPI.Application.Features.Auth.Password.ResetPassword.Service
                 await _auditTrail.RecordPasswordAction(user.Id, currentUser, user.Email, "Reset");
             });
 
-            return PasswordResetMapper.ToResponse(true, "Password has been reset successfully.");
+            return PasswordResetMapper.ToResponse(true, SuccessMessages.Get("ResetPassword:PasswordResetSuccessfully"));
         }
     }
 }

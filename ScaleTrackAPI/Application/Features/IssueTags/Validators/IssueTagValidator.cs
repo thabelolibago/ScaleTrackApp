@@ -1,3 +1,4 @@
+using ScaleTrackAPI.Application.Errors.ErrorMessages;
 using ScaleTrackAPI.Application.Features.IssueTags.DTOs;
 using ScaleTrackAPI.Shared.Validators;
 
@@ -11,12 +12,12 @@ namespace ScaleTrackAPI.Application.Features.IssueTags.Validators
 
             if (request == null)
             {
-                errors.Add("IssueTag request cannot be null.");
+                errors.Add(ErrorMessages.Get("Tag:TagRequestNotNull"));
                 return ValidationResult.Failure(errors.ToArray());
             }
 
             if (request.TagId <= 0)
-                errors.Add("A valid TagId is required.");
+                errors.Add(ErrorMessages.Get("Tag:TagNotFound"));
 
             return errors.Count == 0 
                 ? ValidationResult.Success() 
