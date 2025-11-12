@@ -4,23 +4,26 @@ using ScaleTrackAPI.Domain.Entities;
 using ScaleTrackAPI.Infrastructure.Data;
 using ScaleTrackAPI.Shared.Extensions;
 
-
-namespace ScaleTrackAPI.Application.Features.Auth.BusinessRules.AuthAuditTrail
+namespace ScaleTrackAPI.Application.Features.Auth.Login.BusinessRules
 {
-    public class AuthAuditTrail
+    public class LoginAuditTrail
     {
         private readonly AppDbContext _context;
 
         private const string EntityNameConst = "User";
-        private const string ActionLogout = "Logout";
+        private const string ActionLogin = "Login";
+        private const string ActionRefreshToken = "RefreshToken";
 
-        public AuthAuditTrail(AppDbContext context)
+        public LoginAuditTrail(AppDbContext context)
         {
             _context = context;
         }
 
-        public Task RecordLogout(User user, ClaimsPrincipal actor) =>
-            RecordAsync(user, actor, ActionLogout);
+        public Task RecordLogin(User user, ClaimsPrincipal actor) =>
+            RecordAsync(user, actor, ActionLogin);
+
+        public Task RecordTokenRefresh(User user, ClaimsPrincipal actor) =>
+            RecordAsync(user, actor, ActionRefreshToken);
 
         private async Task RecordAsync(User user, ClaimsPrincipal actor, string action)
         {

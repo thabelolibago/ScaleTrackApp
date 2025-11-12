@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using ScaleTrackAPI.Application.Features.Auth.DTOs.Login;
+using ScaleTrackAPI.Application.Features.Auth.DTOs.Logout;
 using ScaleTrackAPI.Application.Features.Auth.DTOs.Token;
+using ScaleTrackAPI.Application.Features.Auth.Login.DTOs;
+using ScaleTrackAPI.Application.Features.Auth.Login.Services;
 using ScaleTrackAPI.Application.Features.Auth.RegisterUser.DTOs;
 using ScaleTrackAPI.Application.Features.Auth.Services;
 using ScaleTrackAPI.Application.Features.RegisterUser;
@@ -12,6 +14,7 @@ namespace ScaleTrackAPI.Controllers.Auth.AuthController
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly ILoginService _loginService;
         private readonly RegisterUserService _userService;
         private readonly IConfiguration _config;
 
@@ -26,7 +29,7 @@ namespace ScaleTrackAPI.Controllers.Auth.AuthController
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            var (entity, error) = await _authService.LoginAsync(request, User);
+            var (entity, error) = await _loginService.LoginAsync(request, User);
             if (error is not null) return Unauthorized(error);
             return Ok(entity);
         }
@@ -63,10 +66,10 @@ namespace ScaleTrackAPI.Controllers.Auth.AuthController
         }
 
         // 🔹 Refresh token
-        [HttpPost("refresh")]
+        [HttpPost("refresh-token")]
         public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequest request)
         {
-            var (entity, error) = await _authService.RefreshTokenAsync(request, User);
+            var (entity, error) = await _loginService.RefreshTokenAsync(request, User);
             if (error is not null) return Unauthorized(error);
             return Ok(entity);
         }

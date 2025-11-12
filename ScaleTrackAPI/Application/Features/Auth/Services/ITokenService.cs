@@ -1,5 +1,3 @@
-
-
 using ScaleTrackAPI.Domain.Entities;
 
 namespace ScaleTrackAPI.Application.Features.Auth.Services

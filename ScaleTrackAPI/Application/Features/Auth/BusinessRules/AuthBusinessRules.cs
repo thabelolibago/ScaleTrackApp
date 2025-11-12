@@ -1,7 +1,5 @@
 using ScaleTrackAPI.Application.Errors.AppError;
 using ScaleTrackAPI.Application.Errors.ErrorMessages;
-using ScaleTrackAPI.Application.Features.Auth.DTOs.Login;
-using ScaleTrackAPI.Application.Features.Auth.DTOs.Token;
 using ScaleTrackAPI.Application.Messages.SuccessMessages;
 using ScaleTrackAPI.Domain.Entities;
 using ScaleTrackAPI.Infrastructure.Repositories.Interfaces.IUserRepository;
@@ -18,29 +16,6 @@ namespace ScaleTrackAPI.Application.Features.Auth.BusinessRules.AuthBusinessRule
         {
             _userRepo = userRepo;
             _emailHelper = emailHelper;
-        }
-
-        public async Task<AppError?> ValidateLoginAsync(LoginRequest request)
-        {
-            if (string.IsNullOrWhiteSpace(request.Email))
-                return AppError.Validation(ErrorMessages.Get("Validation:EmailRequired"));
-
-            if (string.IsNullOrWhiteSpace(request.Password))
-                return AppError.Validation(ErrorMessages.Get("Validation:PasswordRequired"));
-
-            var userExists = await _userRepo.GetByEmail(request.Email);
-            if (userExists == null)
-                return AppError.Unauthorized(ErrorMessages.Get("Auth:InvalidCredentials"));
-
-            return null;
-        }
-
-        public async Task<AppError?> ValidateRefreshTokenAsync(RefreshTokenRequest request)
-        {
-            if (string.IsNullOrWhiteSpace(request.RefreshToken))
-                return AppError.Validation(ErrorMessages.Get("TokenRequired"));
-
-            return null;
         }
 
         public async Task<(AppError? Error, string? Token)> GenerateEmailVerificationAsync(User user, string baseUrl)

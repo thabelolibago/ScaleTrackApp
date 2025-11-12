@@ -1,4 +1,5 @@
 using ScaleTrackAPI.Application.Features.AuditTrails.Services.AuditTrailService;
+using ScaleTrackAPI.Application.Features.Auth.Login.Services;
 using ScaleTrackAPI.Application.Features.Auth.Password.ChangePassword.Services.ChangePasswordService;
 using ScaleTrackAPI.Application.Features.Auth.Password.ForgotPassword.Services.ForgotPasswordService;
 using ScaleTrackAPI.Application.Features.Auth.Password.ResetPassword.Services.ResetPasswordService;
@@ -39,6 +40,7 @@ namespace ScaleTrackAPI.Shared.Extensions
             services.AddScoped<UserPasswordService>();
             services.AddScoped<EditProfileService>();
             services.AddScoped<RegisterUserService>();
+            services.AddScoped<LoginService>();
             
             return services;
         }

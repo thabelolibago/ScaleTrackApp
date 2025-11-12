@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace ScaleTrackAPI.Application.Features.Auth.DTOs.Login
+namespace ScaleTrackAPI.Application.Features.Auth.Login.DTOs
 {
     public class LoginRequest
     {
