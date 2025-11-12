@@ -1,5 +1,6 @@
 
 using ScaleTrackAPI.Application.Errors.AppError;
+using ScaleTrackAPI.Application.Errors.ErrorMessages;
 using ScaleTrackAPI.Application.Features.Issues.DTOs;
 using ScaleTrackAPI.Domain.Enums;
 using ScaleTrackAPI.Shared.Validators;
@@ -27,7 +28,7 @@ namespace ScaleTrackAPI.Application.Features.Issues.BusinessRules.IssueBusinessR
         public AppError? ValidateStatus(int statusIndex)
         {
             if (!Enum.IsDefined(typeof(IssueStatus), statusIndex))
-                return AppError.Validation($"Invalid IssueStatus index: {statusIndex}");
+                return AppError.Validation(ErrorMessages.Get("Issue:InvalidIssueStatus", statusIndex));
             return null;
         }
     }

@@ -1,3 +1,4 @@
+using ScaleTrackAPI.Application.Errors.ErrorMessages;
 using ScaleTrackAPI.Application.Features.Comments.DTOs;
 using ScaleTrackAPI.Shared.Validators;
 
@@ -11,12 +12,12 @@ namespace ScaleTrackAPI.Application.Features.Comments.Validators
 
             if (request == null)
             {
-                errors.Add("Comment request cannot be null.");
+                errors.Add(ErrorMessages.Get("Comment:CommentRequestNotNull"));
                 return ValidationResult.Failure(errors.ToArray());
             }
 
             if (string.IsNullOrWhiteSpace(request.Content))
-                errors.Add("Comment content is required.");
+                errors.Add(ErrorMessages.Get("Comment:CommentContentRequired"));
 
             return errors.Count == 0
                 ? ValidationResult.Success()

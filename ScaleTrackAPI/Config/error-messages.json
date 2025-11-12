@@ -8,6 +8,11 @@
     },
 
     "Audit": {
+      "AuditRequestNotNull": "Audit trail request cannot be null.",
+      "EntityNameRequired": "Entity name is required.",
+      "EntityIdRequired": "Entity ID is required.",
+      "ActionRequired": "Action is required.",
+      "ChangedByRequired": "ChangedBy is required.",
       "AuditNotFound": "Audit trail with id {0} not found.",
       "AuditCreationFailed": "Failed to create audit trail.",
       "AuditApprovalFailed": "Failed to approve audit trail."
@@ -15,34 +20,45 @@
 
     "Issue": {
       "IssueNotFound": "Issue with id {0} not found.",
+      "IssueRequestNotNull": "Issue request cannot be null.",
+      "IssueTitleRequired": "Issue title is required.",
+      "IssueDescriptionRequired": "Issue description is required.",
       "InvalidIssueType": "Invalid issue type provided.",
       "IssueConflict": "An issue with the same title already exists.",
       "InvalidIssueStatus": "Invalid IssueStatus index: {0}"
     },
 
     "Comment": {
+      "CommentRequestNotNull": "Comment request cannot be null.",
+      "CommentContentRequired": "Comment content is required.",
       "CommentNotFound": "Comment with id {0} not found.",
       "IssueForCommentNotFound": "Cannot add comment. Issue with id {0} not found.",
       "FailedToDeleteComment": "You cannot delete someone else's comment."
     },
 
     "Tag": {
+      "TagNameRequired": "Tag name is required.",
+      "TagRequestNotNull": "Tag request cannot be null.",
       "TagNotFound": "Tag with id {0} not found.",
       "TagAlreadyExists": "Tag '{0}' already exists."
     },
 
     "User": {
-      "UserNotFound": "User not found.",
+      "FirstNameRequired": "First name is required.",
+      "LastNameRequired": "Last name is required.",
+      "EmailRequired": "Email is required.",
       "EmailAlreadyExists": "User with email '{0}' already exists.",
+      "UserNotFound": "User not found.",
       "InvalidRole": "Invalid user role specified.",
       "RoleAlreadyAssignedToUser": "User already has this role",
       "UserRoleNotUpdated": "Failed to update user",
+      "RequestNotNull": "User request cannot be null.",
       "FailedToDeleteUser": "Failed to delete user."
     },
 
     "Token": {
       "InvalidCredentials": "Invalid email or password.",
-      "TokenRequired" : "Refresh token is required.",
+      "TokenRequired": "Refresh token is required.",
       "TokenExpired": "Your session has expired. Please login again.",
       "InvalidToken": "Invalid refresh token provided."
     },
@@ -66,9 +82,48 @@
       "Unauthorized": "You are not authorized to perform this action."
     },
 
-    "Email" : {
-      "EmailVerified" : "Email verified successfully",
-      "EmailNotVerified" : "Please verify your email before logging in."
+    "Email": {
+      "EmailVerified": "Email verified successfully",
+      "EmailNotVerified": "Please verify your email before logging in."
+    },
+
+    "Profile": {
+      "RequestNotNull": "Profile update request cannot be null.",
+      "PasswordUpdateFailed": "Failed to update password.",
+      "NoFieldsProvided": "At least one field must be provided to update the profile.",
+      "FirstNameCharMinLength": "First name must be at least 2 characters.",
+      "LastNameCharMinLength": "Last name must be at least 2 characters.",
+      "PictureUpdateFailed": "Failed to update profile picture."
+    },
+
+    "Register": {
+      "FirstNameAndLastNameRequired": "First name and last name are required.",
+      "PasswordMustIncludeUpperLowerNumberSymbol": "Password must include uppercase, lowercase, number, and symbol."
+    },
+
+    "ChangePassword": {
+      "CurrentPasswordRequired": "Current password is required.",
+      "NewPasswordRequired": "New password is required.",
+      "PasswordsDoNotMatch": "Passwords do not match.",
+      "PasswordTooShort": "New password must be at least 8 characters long.",
+      "IncorrectPassword": "The current password is incorrect."
+    },
+
+    "ForgotPassword": {
+      "EmailRequired": "Email is required"
+    },
+
+    "ResetPassword": {
+      "Token": "Token is required.",
+      "NewPasswordRequired": "New password is required.",
+      "PasswordsDoNotMatch": "Passwords do not match.",
+      "PasswordTooShort": "New password must be at least 8 characters long.",
+      "InvalidOrExpiredToken": "The password reset token is invalid or has expired."
+    },
+
+    "UserPassword": {
+      "RemoveFailed": "Failed to reset password.",
+      "AddFailed": "Failed to set new password."
     }
   }
 }

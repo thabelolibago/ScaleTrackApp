@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using ScaleTrackAPI.Domain.Entities;
 using ScaleTrackAPI.Shared.Helpers;
 

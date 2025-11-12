@@ -1,4 +1,5 @@
 using ScaleTrackAPI.Application.Errors.AppError;
+using ScaleTrackAPI.Application.Errors.ErrorMessages;
 using ScaleTrackAPI.Infrastructure.Repositories.Interfaces.IUserRepository;
 
 namespace ScaleTrackAPI.Application.Features.Auth.Password.ChangePassword.BusinessRules.ChangePasswordBusinessRules
@@ -16,20 +17,20 @@ namespace ScaleTrackAPI.Application.Features.Auth.Password.ChangePassword.Busine
             int userId, string currentPassword, string newPassword, string confirmPassword)
         {
             if (string.IsNullOrWhiteSpace(currentPassword))
-                return (false, AppError.Validation("Current password is required."));
+                return (false, AppError.Validation(ErrorMessages.Get("ChangePassword:CurrentPasswordRequired")));
             
             if (string.IsNullOrWhiteSpace(newPassword))
-                return (false, AppError.Validation("New password is required."));
+                return (false, AppError.Validation(ErrorMessages.Get("ChangePassword:NewPasswordRequired")));
 
             if (newPassword != confirmPassword)
-                return (false, AppError.Validation("Passwords do not match."));
+                return (false, AppError.Validation(ErrorMessages.Get("ChangePassword:PasswordsDoNotMatch")));
 
             if (newPassword.Length < 8)
-                return (false, AppError.Validation("Password must be at least 8 characters long."));
+                return (false, AppError.Validation(ErrorMessages.Get("ChangePassword:PasswordTooShort")));
 
             var user = await _userRepo.GetById(userId);
             if (user == null)
-                return (false, AppError.NotFound("User not found."));
+                return (false, AppError.NotFound(ErrorMessages.Get("User:UserNotFound", userId)));
 
             // Optionally: check if new password is same as old
             return (true, null);

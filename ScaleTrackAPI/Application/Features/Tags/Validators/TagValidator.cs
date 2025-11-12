@@ -1,3 +1,4 @@
+using ScaleTrackAPI.Application.Errors.ErrorMessages;
 using ScaleTrackAPI.Application.Features.Tags.DTOs;
 using ScaleTrackAPI.Shared.Validators;
 
@@ -10,10 +11,10 @@ namespace ScaleTrackAPI.Application.Features.Tags.Validators
             var errors = new List<string>();
 
             if (request == null)
-                return ValidationResult.Failure("Tag request cannot be null.");
+                return ValidationResult.Failure(ErrorMessages.Get("Tag:RequestNull"));
 
             if (string.IsNullOrWhiteSpace(request.Name))
-                errors.Add("Tag name is required.");
+                errors.Add(ErrorMessages.Get("Tag:NameRequired"));
 
             return errors.Count == 0
                 ? ValidationResult.Success()

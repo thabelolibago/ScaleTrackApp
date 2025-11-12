@@ -1,3 +1,4 @@
+using ScaleTrackAPI.Application.Errors.ErrorMessages;
 using ScaleTrackAPI.Application.Features.Issues.DTOs;
 using ScaleTrackAPI.Domain.Enums;
 using ScaleTrackAPI.Shared.Validators;
@@ -12,21 +13,21 @@ namespace ScaleTrackAPI.Application.Features.Issues.Validators.IssueValidator
 
             if (request == null)
             {
-                errors.Add("Issue request cannot be null.");
+                errors.Add(ErrorMessages.Get("Issue:IssueRequestNotNull"));
                 return ValidationResult.Failure(errors.ToArray());
             }
 
             if (string.IsNullOrWhiteSpace(request.Title))
-                errors.Add("Title is required.");
+                errors.Add(ErrorMessages.Get("Issue:IssueTitleRequired"));
 
             if (string.IsNullOrWhiteSpace(request.Description))
-                errors.Add("Description is required.");
+                errors.Add(ErrorMessages.Get("Issue:IssueDescriptionRequired"));
 
             if (!Enum.IsDefined(typeof(IssueType), request.Type))
-                errors.Add("Invalid Issue Type.");
+                errors.Add(ErrorMessages.Get("Issue:InvalidIssueType"));
 
             if (!Enum.IsDefined(typeof(IssuePriority), request.Priority))
-                errors.Add("Invalid Priority.");
+                errors.Add(ErrorMessages.Get("Issue:InvalidIssuePriority"));
 
             return errors.Count == 0
                 ? ValidationResult.Success()

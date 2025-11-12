@@ -1,4 +1,5 @@
 using ScaleTrackAPI.Application.Errors.AppError;
+using ScaleTrackAPI.Application.Errors.ErrorMessages;
 using ScaleTrackAPI.Domain.Entities;
 using ScaleTrackAPI.Infrastructure.Repositories.Interfaces.IPasswordResetRepository;
 
@@ -20,20 +21,20 @@ namespace ScaleTrackAPI.Application.Features.Auth.Password.ResetPassword.Busines
             string token, string newPassword, string confirmPassword)
         {
             if (string.IsNullOrWhiteSpace(token))
-                return (false, AppError.Validation("Token is required."), null);
+                return (false, AppError.Validation(ErrorMessages.Get("ResetPassword:Token")), null);
 
             if (string.IsNullOrWhiteSpace(newPassword))
-                return (false, AppError.Validation("New password is required."), null);
+                return (false, AppError.Validation(ErrorMessages.Get("ResetPassword:NewPasswordRequired")), null);
 
             if (newPassword != confirmPassword)
-                return (false, AppError.Validation("Passwords do not match."), null);
+                return (false, AppError.Validation(ErrorMessages.Get("ResetPassword:PasswordsDoNotMatch")), null);
 
             if (newPassword.Length < 8)
-                return (false, AppError.Validation("Password must be at least 8 characters long."), null);
+                return (false, AppError.Validation(ErrorMessages.Get("ResetPassword:PasswordTooShort")), null);
 
             var tokenEntry = await _repo.GetTokenAsync(token);
             if (tokenEntry == null)
-                return (false, AppError.NotFound("Invalid or expired token."), null);
+                return (false, AppError.NotFound(ErrorMessages.Get("ResetPassword:InvalidOrExpiredToken")), null);
 
             return (true, null, tokenEntry);
         }
