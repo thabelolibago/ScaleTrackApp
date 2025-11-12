@@ -1,4 +1,6 @@
 using ScaleTrackAPI.Application.Features.Auth.BusinessRules.AuthAuditTrail;
+using ScaleTrackAPI.Application.Features.Auth.Login.BusinessRules;
+using ScaleTrackAPI.Application.Features.Auth.Logout.BusinessRules;
 using ScaleTrackAPI.Application.Features.Auth.Password.Shared.PasswordAuditTrail;
 using ScaleTrackAPI.Application.Features.Auth.RegisterUser.BusinessRules;
 using ScaleTrackAPI.Application.Features.Comments.BusinessRules.CommentAuditTrail;
@@ -23,6 +25,8 @@ namespace ScaleTrackAPI.Shared.Extensions
             services.AddScoped<PasswordAuditTrail>();
             services.AddScoped<EditProfileAuditTrail>();
             services.AddScoped<RegisterUserAuditTrail>();
+            services.AddScoped<LoginAuditTrail>();
+            services.AddScoped<LogoutAuditTrail>();
             return services;
         }
     }

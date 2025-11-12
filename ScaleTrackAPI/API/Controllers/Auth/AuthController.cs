@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
-using ScaleTrackAPI.Application.Features.Auth.DTOs.Login;
 using ScaleTrackAPI.Application.Features.Auth.DTOs.Token;
+using ScaleTrackAPI.Application.Features.Auth.Login.DTOs;
+using ScaleTrackAPI.Application.Features.Auth.Login.Services;
+using ScaleTrackAPI.Application.Features.Auth.Logout.DTOs;
+using ScaleTrackAPI.Application.Features.Auth.Logout.Services;
 using ScaleTrackAPI.Application.Features.Auth.RegisterUser.DTOs;
 using ScaleTrackAPI.Application.Features.Auth.Services;
 using ScaleTrackAPI.Application.Features.RegisterUser;
@@ -13,11 +16,15 @@ namespace ScaleTrackAPI.Controllers.Auth.AuthController
     {
         private readonly IAuthService _authService;
         private readonly RegisterUserService _userService;
+        private readonly ILoginService _loginService;
+        private readonly ILogoutService _logoutService;
         private readonly IConfiguration _config;
 
-        public AuthController(IAuthService authService, RegisterUserService userService, IConfiguration config)
+        public AuthController(IAuthService authService,ILoginService loginService, ILogoutService logoutService, RegisterUserService userService, IConfiguration config)
         {
             _authService = authService;
+            _loginService = loginService;
+            _logoutService = logoutService;
             _userService = userService;
             _config = config;
         }
@@ -26,7 +33,7 @@ namespace ScaleTrackAPI.Controllers.Auth.AuthController
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            var (entity, error) = await _authService.LoginAsync(request, User);
+            var (entity, error) = await _loginService.LoginAsync(request, User);
             if (error is not null) return Unauthorized(error);
             return Ok(entity);
         }
@@ -66,7 +73,7 @@ namespace ScaleTrackAPI.Controllers.Auth.AuthController
         [HttpPost("refresh")]
         public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequest request)
         {
-            var (entity, error) = await _authService.RefreshTokenAsync(request, User);
+            var (entity, error) = await _loginService.RefreshTokenAsync(request, User);
             if (error is not null) return Unauthorized(error);
             return Ok(entity);
         }
@@ -75,7 +82,7 @@ namespace ScaleTrackAPI.Controllers.Auth.AuthController
         [HttpPost("logout")]
         public async Task<IActionResult> Logout([FromBody] LogoutRequest request)
         {
-            var error = await _authService.LogoutAsync(request, User);
+            var error = await _logoutService.LogoutAsync(request, User);
             if (error is not null) return BadRequest(error);
             return Ok();
         }
