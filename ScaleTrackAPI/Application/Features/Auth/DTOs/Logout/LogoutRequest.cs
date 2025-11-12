@@ -1,4 +1,4 @@
-namespace ScaleTrackAPI.Application.Features.Auth.DTOs.Login
+namespace ScaleTrackAPI.Application.Features.Auth.DTOs.Logout
 {
     public class LogoutRequest
     {

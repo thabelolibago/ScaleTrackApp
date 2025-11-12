@@ -3,9 +3,7 @@ using ScaleTrackAPI.Application.Errors.AppError;
 using ScaleTrackAPI.Application.Errors.ErrorMessages;
 using ScaleTrackAPI.Application.Features.Auth.BusinessRules.AuthAuditTrail;
 using ScaleTrackAPI.Application.Features.Auth.BusinessRules.AuthBusinessRules;
-using ScaleTrackAPI.Application.Features.Auth.DTOs.Login;
-using ScaleTrackAPI.Application.Features.Auth.DTOs.Token;
-using ScaleTrackAPI.Application.Features.Auth.Mappers.Auth.AuthMapper;
+using ScaleTrackAPI.Application.Features.Auth.DTOs.Logout;
 using ScaleTrackAPI.Domain.Entities;
 using ScaleTrackAPI.Infrastructure.Data;
 using ScaleTrackAPI.Infrastructure.Services.Base;
@@ -41,28 +39,7 @@ namespace ScaleTrackAPI.Application.Features.Auth.Services.AuthService
             _auditTrail = auditTrail;
         }
 
-        public async Task<(LoginResponse? Entity, AppError? Error)> LoginAsync(LoginRequest request, ClaimsPrincipal actor)
-        {
-            var validation = await _rules.ValidateLoginAsync(request);
-            if (validation != null) return (null, validation);
-
-            var user = await _userManager.FindByEmailAsync(request.Email);
-            if (user == null)
-                return (null, AppError.Unauthorized(ErrorMessages.Get("Auth:InvalidCredentials")));
-
-            var passwordWithPepper = _passwordHelper.WithPepper(request.Password);
-            var result = await _signInManager.CheckPasswordSignInAsync(user, passwordWithPepper, false);
-            if (!result.Succeeded)
-                return (null, AppError.Unauthorized(ErrorMessages.Get("Auth:InvalidCredentials")));
-
-            if (user.RequiresEmailVerification && !user.IsEmailVerified)
-                return (null, AppError.Unauthorized(ErrorMessages.Get("Email:EmailNotVerified")));
-
-            await _auditTrail.RecordLogin(user, actor);
-
-            var response = await GenerateLoginResponseAsync(user);
-            return (response, null);
-        }
+    
 
         public async Task<AppError?> VerifyEmailAsync(string token)
         {
@@ -90,28 +67,6 @@ namespace ScaleTrackAPI.Application.Features.Auth.Services.AuthService
             return null;
         }
 
-        public async Task<(LoginResponse? Entity, AppError? Error)> RefreshTokenAsync(RefreshTokenRequest request, ClaimsPrincipal actor)
-        {
-            var validation = await _rules.ValidateRefreshTokenAsync(request);
-            if (validation != null) return (null, validation);
-
-            return await ExecuteInTransactionAsync<(LoginResponse? Entity, AppError? Error)>(async () =>
-            {
-                var storedToken = await _tokenService.GetRefreshTokenAsync(request.RefreshToken);
-
-                if (storedToken == null || storedToken.IsRevoked || storedToken.IsUsed || storedToken.Expires < DateTime.UtcNow)
-                    return (null, AppError.Unauthorized(ErrorMessages.Get("Token:TokenExpired")));
-
-                await _tokenService.MarkRefreshTokenUsedAsync(storedToken);
-
-                var user = storedToken.User!;
-                await _auditTrail.RecordTokenRefresh(user, actor);
-
-                var response = await GenerateLoginResponseAsync(user);
-                return (response, null);
-            });
-        }
-
         public async Task<AppError?> LogoutAsync(LogoutRequest request, ClaimsPrincipal actor)
         {
             var stored = await _tokenService.GetRefreshTokenAsync(request.RefreshToken);
@@ -127,11 +82,7 @@ namespace ScaleTrackAPI.Application.Features.Auth.Services.AuthService
         public async Task<(string AccessToken, string RefreshToken)> GenerateTokensAsync(User user)
             => await _tokenService.CreateTokensAsync(user);
 
-        private async Task<LoginResponse> GenerateLoginResponseAsync(User user)
-        {
-            var (accessToken, refreshToken) = await _tokenService.CreateTokensAsync(user);
-            return user.ToLoginResponse(accessToken, refreshToken);
-        }
+        
     }
 }
 
