@@ -1,4 +1,4 @@
-namespace ScaleTrackAPI.Application.Features.Auth.DTOs.Email
+namespace ScaleTrackAPI.Application.Features.Auth.VerifyEmail.DTOs
 {
     public class EmailVerificationRequest
     {

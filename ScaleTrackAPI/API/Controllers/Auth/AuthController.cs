@@ -6,6 +6,7 @@ using ScaleTrackAPI.Application.Features.Auth.Logout.DTOs;
 using ScaleTrackAPI.Application.Features.Auth.Logout.Services;
 using ScaleTrackAPI.Application.Features.Auth.RegisterUser.DTOs;
 using ScaleTrackAPI.Application.Features.Auth.Services;
+using ScaleTrackAPI.Application.Features.Auth.VerifyEmail.Services;
 using ScaleTrackAPI.Application.Features.RegisterUser;
 
 namespace ScaleTrackAPI.Controllers.Auth.AuthController
@@ -18,6 +19,7 @@ namespace ScaleTrackAPI.Controllers.Auth.AuthController
         private readonly RegisterUserService _userService;
         private readonly ILoginService _loginService;
         private readonly ILogoutService _logoutService;
+        private readonly IVerifyEmailService _verifyEmailService;
         private readonly IConfiguration _config;
 
         public AuthController(
@@ -25,12 +27,14 @@ namespace ScaleTrackAPI.Controllers.Auth.AuthController
             ILoginService loginService,
             ILogoutService logoutService,
             RegisterUserService userService,
+            IVerifyEmailService verifyEmailService,
             IConfiguration config)
         {
             _authService = authService;
             _loginService = loginService;
             _logoutService = logoutService;
             _userService = userService;
+            _verifyEmailService = verifyEmailService;
             _config = config;
         }
 
@@ -71,7 +75,7 @@ namespace ScaleTrackAPI.Controllers.Auth.AuthController
         [HttpGet("verify-email")]
         public async Task<IActionResult> VerifyEmail([FromQuery] string token)
         {
-            var error = await _authService.VerifyEmailAsync(token);
+            var error = await _verifyEmailService.VerifyEmailAsync(token);
             if (error != null) return BadRequest(error);
             return Ok();
         }

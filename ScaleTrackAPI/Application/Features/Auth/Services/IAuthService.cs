@@ -5,7 +5,7 @@ namespace ScaleTrackAPI.Application.Features.Auth.Services
 {
     public interface IAuthService
     {
-        Task<AppError?> VerifyEmailAsync(string token);
+        
         Task<AppError?> ResendVerificationEmailAsync(string email, string baseUrl);
         
         
