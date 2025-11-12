@@ -78,7 +78,7 @@ namespace ScaleTrackAPI.Application.Features.RegisterUser
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
             }, "Registration"));
 
-            await _auditHelper.RecordCreate(user, actor);
+            await _auditHelper.RecordCreate(user);
 
             return (new RegisterUserResponse
             {

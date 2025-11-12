@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using ScaleTrackAPI.Domain.Entities;
 using ScaleTrackAPI.Shared.Helpers;
 
@@ -8,7 +7,12 @@ namespace ScaleTrackAPI.Application.Features.Auth.RegisterUser.BusinessRules
     {
         private readonly AuditHelper _auditHelper;
         private const string EntityName = "User";
-        public async Task RecordCreate(User user, ClaimsPrincipal userClaims)
+
+        public RegisterUserAuditTrail(AuditHelper auditHelper)
+        {
+            _auditHelper = auditHelper;
+        }
+        public async Task RecordCreate(User user)
         {
             await _auditHelper.RecordAuditAsync
             (
@@ -17,9 +21,8 @@ namespace ScaleTrackAPI.Application.Features.Auth.RegisterUser.BusinessRules
                 null,
                 user,
                 EntityName,
-                userClaims
+                null
             );
         }
     }
-  
 }
