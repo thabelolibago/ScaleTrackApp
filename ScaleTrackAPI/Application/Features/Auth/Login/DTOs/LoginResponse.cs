@@ -1,6 +1,6 @@
 using ScaleTrackAPI.Application.Features.Users.DTOs;
 
-namespace ScaleTrackAPI.Application.Features.Auth.DTOs.Login
+namespace ScaleTrackAPI.Application.Features.Auth.Login.DTOs
 {
     public class LoginResponse
     {
