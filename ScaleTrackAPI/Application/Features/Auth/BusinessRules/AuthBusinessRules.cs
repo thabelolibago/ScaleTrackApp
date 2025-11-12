@@ -36,21 +36,7 @@ namespace ScaleTrackAPI.Application.Features.Auth.BusinessRules.AuthBusinessRule
             return (null, user.EmailVerificationToken);
         }
 
-        public async Task<(bool Success, string Message)> VerifyEmailAsync(string token)
-        {
-            var user = await _userRepo.GetByVerificationToken(token);
-            if (user == null)
-                return (false, ErrorMessages.Get("Auth:InvalidToken"));
-
-            user.IsEmailVerified = true;
-            user.RequiresEmailVerification = false;
-            user.EmailVerificationToken = null;
-            user.EmailVerifiedAt = DateTime.UtcNow;
-
-            await _userRepo.Update(user);
-
-            return (true, SuccessMessages.Get("Email:EmailVerified"));
-        }
+        
     }
 }
 
