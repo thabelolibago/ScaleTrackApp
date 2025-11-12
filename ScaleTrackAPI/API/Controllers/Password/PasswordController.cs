@@ -9,7 +9,7 @@ using System.Security.Claims;
 namespace ScaleTrackAPI.Controllers
 {
     [ApiController]
-    [Route("api/v1/password")]
+    [Route("api/v1/auth/password")]
     public class PasswordController : ControllerBase
     {
         private readonly ForgotPasswordService _forgotPasswordService;
@@ -26,9 +26,11 @@ namespace ScaleTrackAPI.Controllers
             _changePasswordService = changePasswordService;
         }
 
+        #region Password Management
+
         /// <summary>
         /// Sends a password reset link to the user's email.
-        /// POST api/v1/password/forgot
+        /// POST api/v1/auth/forgot
         /// </summary>
         [HttpPost("forgot")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
@@ -39,7 +41,7 @@ namespace ScaleTrackAPI.Controllers
 
         /// <summary>
         /// Resets the user's password using a valid token.
-        /// POST api/v1/password/reset
+        /// POST api/v1/auth/reset
         /// </summary>
         [HttpPost("reset")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
@@ -50,22 +52,22 @@ namespace ScaleTrackAPI.Controllers
 
         /// <summary>
         /// Changes the logged-in user's password.
-        /// POST api/v1/password/change
+        /// POST api/v1/auth/change
         /// </summary>
         [HttpPost("change")]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null)
-                return Unauthorized();
+            if (userIdClaim == null) return Unauthorized();
 
             if (!int.TryParse(userIdClaim.Value, out var userId))
-                return BadRequest("Invalid user ID.");
+                return Unauthorized();
 
             var result = await _changePasswordService.ChangePasswordAsync(userId, request, User);
-
             return result.Success ? Ok(result) : BadRequest(result);
         }
+
+        #endregion
     }
 }
 
