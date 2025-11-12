@@ -18,9 +18,10 @@ namespace ScaleTrackAPI.Controllers.Auth.AuthController
         private readonly RegisterUserService _userService;
         private readonly IConfiguration _config;
 
-        public AuthController(IAuthService authService, RegisterUserService userService, IConfiguration config)
+        public AuthController(IAuthService authService, ILoginService loginService, RegisterUserService userService, IConfiguration config)
         {
             _authService = authService;
+            _loginService = loginService;
             _userService = userService;
             _config = config;
         }

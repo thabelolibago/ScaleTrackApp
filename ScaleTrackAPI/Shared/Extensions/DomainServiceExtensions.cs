@@ -40,7 +40,7 @@ namespace ScaleTrackAPI.Shared.Extensions
             services.AddScoped<UserPasswordService>();
             services.AddScoped<EditProfileService>();
             services.AddScoped<RegisterUserService>();
-            services.AddScoped<LoginService>();
+            services.AddScoped<ILoginService, LoginService>();
             
             return services;
         }
