@@ -20,7 +20,12 @@ namespace ScaleTrackAPI.Controllers.Auth.AuthController
         private readonly ILogoutService _logoutService;
         private readonly IConfiguration _config;
 
-        public AuthController(IAuthService authService,ILoginService loginService, ILogoutService logoutService, RegisterUserService userService, IConfiguration config)
+        public AuthController(
+            IAuthService authService,
+            ILoginService loginService,
+            ILogoutService logoutService,
+            RegisterUserService userService,
+            IConfiguration config)
         {
             _authService = authService;
             _loginService = loginService;
@@ -29,7 +34,12 @@ namespace ScaleTrackAPI.Controllers.Auth.AuthController
             _config = config;
         }
 
-        // 🔹 Login
+        #region Authentication
+
+        /// <summary>
+        /// Logs in a user and returns access & refresh tokens.
+        /// POST api/v1/auth/login
+        /// </summary>
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
@@ -38,10 +48,14 @@ namespace ScaleTrackAPI.Controllers.Auth.AuthController
             return Ok(entity);
         }
 
-        // 🔹 Register
+        /// <summary>
+        /// Registers a new user and sends verification email.
+        /// POST api/v1/auth/register
+        /// </summary>
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterUserRequest request)
         {
+            // Frontend URL for email verification link
             string baseUrl = _config["App:FrontendUrl"] ?? "http://localhost:4200";
             var (response, error) = await _userService.RegisterUser(request, baseUrl);
 
@@ -50,7 +64,10 @@ namespace ScaleTrackAPI.Controllers.Auth.AuthController
             return CreatedAtAction(nameof(Register), response);
         }
 
-        // 🔹 Verify email
+        /// <summary>
+        /// Verifies a user's email with a token.
+        /// GET api/v1/auth/verify-email?token=
+        /// </summary>
         [HttpGet("verify-email")]
         public async Task<IActionResult> VerifyEmail([FromQuery] string token)
         {
@@ -59,7 +76,10 @@ namespace ScaleTrackAPI.Controllers.Auth.AuthController
             return Ok();
         }
 
-        // 🔹 Resend verification email
+        /// <summary>
+        /// Resends the verification email.
+        /// POST api/v1/auth/resend-verification?email=
+        /// </summary>
         [HttpPost("resend-verification")]
         public async Task<IActionResult> ResendVerification([FromQuery] string email)
         {
@@ -69,7 +89,10 @@ namespace ScaleTrackAPI.Controllers.Auth.AuthController
             return Ok();
         }
 
-        // 🔹 Refresh token
+        /// <summary>
+        /// Refreshes access & refresh tokens using a valid refresh token.
+        /// POST api/v1/auth/refresh
+        /// </summary>
         [HttpPost("refresh")]
         public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequest request)
         {
@@ -78,7 +101,10 @@ namespace ScaleTrackAPI.Controllers.Auth.AuthController
             return Ok(entity);
         }
 
-        // 🔹 Logout
+        /// <summary>
+        /// Logs out a user and revokes the refresh token.
+        /// POST api/v1/auth/logout
+        /// </summary>
         [HttpPost("logout")]
         public async Task<IActionResult> Logout([FromBody] LogoutRequest request)
         {
@@ -86,6 +112,8 @@ namespace ScaleTrackAPI.Controllers.Auth.AuthController
             if (error is not null) return BadRequest(error);
             return Ok();
         }
+
+        #endregion 
     }
 }
 
