@@ -10,6 +10,8 @@ using ScaleTrackAPI.Application.Features.Auth.Password.ForgotPassword.BusinessRu
 using ScaleTrackAPI.Application.Features.Profile.EditProfile.BusinessRules.EditProfileBusinessRules;
 using ScaleTrackAPI.Application.Features.Auth.RegisterUser.BusinessRules;
 using ScaleTrackAPI.Application.Features.Auth.Login.BusinessRules;
+using ScaleTrackAPI.Application.Features.Auth.ResendVerification.BusinessRules;
+using ScaleTrackAPI.Application.Features.Auth.VerifyEmail.BusinessRules;
 
 namespace ScaleTrackAPI.Shared.Extensions
 {
@@ -29,6 +31,8 @@ namespace ScaleTrackAPI.Shared.Extensions
             services.AddScoped<EditProfileBusinessRules>();
             services.AddScoped<RegisterUserBusinessRules>();
             services.AddScoped<LoginBusinessRules>();
+             services.AddScoped<VerifyEmailBusinessRules>();
+            services.AddScoped<ResendVerificationBusinessRules>();
             return services;
         }
     }

@@ -3,7 +3,7 @@ using ScaleTrackAPI.Application.Features.Auth.VerifyEmail.BusinessRules;
 
 namespace ScaleTrackAPI.Application.Features.Auth.VerifyEmail.Services
 {
-    public class VerifyEmailService
+    public class VerifyEmailService : IVerifyEmailService
     {
         private readonly VerifyEmailBusinessRules _rules;
         public VerifyEmailService(VerifyEmailBusinessRules rules)

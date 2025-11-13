@@ -53,7 +53,8 @@
       "RoleAlreadyAssignedToUser": "User already has this role",
       "UserRoleNotUpdated": "Failed to update user",
       "RequestNotNull": "User request cannot be null.",
-      "FailedToDeleteUser": "Failed to delete user."
+      "FailedToDeleteUser": "Failed to delete user.",
+      "EmailNotVerified": "This email has not been verified. Please verify your email before logging in."
     },
 
     "Token": {

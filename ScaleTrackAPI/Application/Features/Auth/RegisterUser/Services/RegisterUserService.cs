@@ -6,6 +6,7 @@ using ScaleTrackAPI.Application.Features.Auth.BusinessRules.AuthBusinessRules;
 using ScaleTrackAPI.Application.Features.Auth.RegisterUser.BusinessRules;
 using ScaleTrackAPI.Application.Features.Auth.RegisterUser.DTOs;
 using ScaleTrackAPI.Application.Features.Auth.RegisterUser.Mappers;
+using ScaleTrackAPI.Application.Features.Auth.ResendVerification.BusinessRules;
 using ScaleTrackAPI.Application.Features.Auth.Services;
 using ScaleTrackAPI.Application.Features.Users.Mappers.UserMapper;
 using ScaleTrackAPI.Domain.Entities;
@@ -22,34 +23,43 @@ namespace ScaleTrackAPI.Application.Features.RegisterUser
         private readonly PasswordHelper _passwordHelper;
         private readonly ITokenService _tokenService;
         private readonly AuthBusinessRules _authRules;
+        private readonly ResendVerificationBusinessRules _resendVerificationBusinessRules;
         private readonly RegisterUserAuditTrail _auditHelper;
-    
+
         public RegisterUserService(IUserRepository repo,
             UserManager<User> userManager,
             PasswordHelper passwordHelper,
             ITokenService tokenService,
             AuthBusinessRules authRules,
-            RegisterUserAuditTrail auditHelper  )
+            ResendVerificationBusinessRules resendVerificationBusinessRules,
+            RegisterUserAuditTrail auditHelper)
         {
             _repo = repo;
             _userManager = userManager;
             _passwordHelper = passwordHelper;
             _tokenService = tokenService;
             _authRules = authRules;
+            _resendVerificationBusinessRules = resendVerificationBusinessRules;
             _auditHelper = auditHelper;
-            
+
         }
 
-         public async Task<(RegisterUserResponse? Response, AppError? Error)> RegisterUser(RegisterUserRequest request, string baseUrl)
+        public async Task<(RegisterUserResponse? Response, AppError? Error)> RegisterUser(RegisterUserRequest request, string baseUrl)
         {
             if (request == null)
                 return (null, AppError.Validation(ErrorMessages.Get("Validation:RequestNotNull")));
+
+            if (!string.Equals(request.Email?.Trim(), request.ConfirmEmail?.Trim(), StringComparison.OrdinalIgnoreCase))
+                return (null, AppError.Validation(ErrorMessages.Get("Validation:EmailsDoNotMatch")));
+
+            if (!string.Equals(request.Password, request.ConfirmPassword))
+                return (null, AppError.Validation(ErrorMessages.Get("Validation:PasswordsDoNotMatch")));
 
             var existingUser = await _repo.GetByEmail(request.Email);
             if (existingUser != null)
             {
                 if (!existingUser.IsEmailVerified)
-                    return (null, AppError.Conflict(ErrorMessages.Get("Validation:EmailsDoNotMatch")));
+                    return (null, AppError.Conflict(ErrorMessages.Get("User:EmailNotVerified")));
 
                 return (null, AppError.Conflict(ErrorMessages.Get("User:EmailAlreadyExists")));
             }
@@ -69,14 +79,9 @@ namespace ScaleTrackAPI.Application.Features.RegisterUser
 
             await _userManager.AddClaimAsync(user, new Claim(ClaimTypes.Role, user.Role.ToString()));
 
-            await _authRules.GenerateEmailVerificationAsync(user, baseUrl);
+            await _resendVerificationBusinessRules.GenerateEmailVerificationAsync(user, baseUrl);
 
             var (accessToken, refreshToken) = await _tokenService.CreateTokensAsync(user);
-
-            var actor = new ClaimsPrincipal(new ClaimsIdentity(new[]
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
-            }, "Registration"));
 
             await _auditHelper.RecordCreate(user);
 
@@ -87,6 +92,7 @@ namespace ScaleTrackAPI.Application.Features.RegisterUser
                 RefreshToken = refreshToken
             }, null);
         }
+
     }
 
 }
