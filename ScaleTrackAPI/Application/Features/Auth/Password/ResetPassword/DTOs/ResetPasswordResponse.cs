@@ -1,4 +1,4 @@
-namespace ScaleTrackAPI.Application.Features.Auth.DTOs.Password
+namespace ScaleTrackAPI.Application.Features.Auth.Password.ResetPassword.DTOs
 {
     public class ResetPasswordResponse
     {

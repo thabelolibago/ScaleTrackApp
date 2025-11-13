@@ -1,5 +1,5 @@
 using System.Security.Cryptography;
-using ScaleTrackAPI.Application.Features.Auth.Mappers.Password.PasswordResetMapper;
+using ScaleTrackAPI.Application.Features.Auth.Password.Mappers;
 using ScaleTrackAPI.Domain.Entities;
 using ScaleTrackAPI.Infrastructure.Repositories.Interfaces.IPasswordResetRepository;
 

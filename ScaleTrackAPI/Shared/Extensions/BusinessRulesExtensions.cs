@@ -1,4 +1,3 @@
-using ScaleTrackAPI.Application.Features.Auth.BusinessRules.AuthBusinessRules;
 using ScaleTrackAPI.Application.Features.Issues.BusinessRules.IssueBusinessRules;
 using ScaleTrackAPI.Application.Features.Comments.BusinessRules.CommentBusinessRules;
 using ScaleTrackAPI.Application.Features.IssueTags.BusinessRules.IssueTagBusinessRules;
@@ -19,7 +18,6 @@ namespace ScaleTrackAPI.Shared.Extensions
     {
         public static IServiceCollection AddBusinessRules(this IServiceCollection services)
         {
-            services.AddScoped<AuthBusinessRules>();
             services.AddScoped<IssueBusinessRules>();
             services.AddScoped<CommentBusinessRules>();
             services.AddScoped<IssueTagBusinessRules>();

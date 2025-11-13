@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
-using ScaleTrackAPI.Application.Features.Auth.DTOs.Password;
+using ScaleTrackAPI.Application.Features.Auth.Password.ChangePassword.DTOs;
 using ScaleTrackAPI.Application.Features.Auth.Password.ChangePassword.Services.ChangePasswordService;
+using ScaleTrackAPI.Application.Features.Auth.Password.ForgotPassword.DTOs;
 using ScaleTrackAPI.Application.Features.Auth.Password.ForgotPassword.Services.ForgotPasswordService;
+using ScaleTrackAPI.Application.Features.Auth.Password.ResetPassword.DTOs;
 using ScaleTrackAPI.Application.Features.Auth.Password.ResetPassword.Services.ResetPasswordService;
 using System.Security.Claims;
 

@@ -1,7 +1,7 @@
-using ScaleTrackAPI.Application.Features.Auth.DTOs.Password;
+using ScaleTrackAPI.Application.Features.Auth.Password.ResetPassword.DTOs;
 using ScaleTrackAPI.Domain.Entities;
 
-namespace ScaleTrackAPI.Application.Features.Auth.Mappers.Password.PasswordResetMapper
+namespace ScaleTrackAPI.Application.Features.Auth.Password.Mappers
 {
     public static class PasswordResetMapper
     {

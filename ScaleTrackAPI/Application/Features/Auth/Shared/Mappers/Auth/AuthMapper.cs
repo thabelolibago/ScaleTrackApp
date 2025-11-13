@@ -1,6 +1,6 @@
 using ScaleTrackAPI.Domain.Entities;
 
-namespace ScaleTrackAPI.Application.Features.Auth.Mappers.Auth.AuthMapper
+namespace ScaleTrackAPI.Application.Features.Auth.Shared.Mappers.Auth
 {
     public static class AuthMapper
     {

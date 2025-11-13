@@ -17,7 +17,8 @@ namespace ScaleTrackAPI.Shared.Helpers
         }
 
         /// <summary>
-        /// Records an audit trail. Can use either a logged-in user (ClaimsPrincipal) or an email for unauthenticated actions.
+        /// Records a general audit trail for any entity.
+        /// Supports either ClaimsPrincipal (logged-in) or string email (unauthenticated).
         /// </summary>
         public async Task RecordAuditAsync<T>(
             string action,
@@ -25,7 +26,7 @@ namespace ScaleTrackAPI.Shared.Helpers
             T? oldValue,
             T? newValue,
             string entityName,
-            object changedBy // ClaimsPrincipal OR string email
+            object changedBy // ClaimsPrincipal OR string email OR null
         )
         {
             int? userId = null;
@@ -63,6 +64,28 @@ namespace ScaleTrackAPI.Shared.Helpers
             _context.AuditTrails.Add(audit);
             await _context.SaveChangesAsync();
         }
+
+        /// <summary>
+        /// Convenience overload for user-related actions.
+        /// </summary>
+        public Task RecordUserActionAsync(User user, string action, ClaimsPrincipal? actor = null)
+        {
+            object changedBy = actor != null ? actor : (object)user.Email;
+            return RecordAuditAsync(action, user.Id, null, user, "User", changedBy);
+        }
+
+        // === Optional Convenience Shortcuts ===
+        public Task RecordLoginAsync(User user, ClaimsPrincipal? actor = null) =>
+            RecordUserActionAsync(user, "Login", actor);
+
+        public Task RecordLogoutAsync(User user, ClaimsPrincipal? actor = null) =>
+            RecordUserActionAsync(user, "Logout", actor);
+
+        public Task RecordVerifyEmailAsync(User user, ClaimsPrincipal? actor = null) =>
+            RecordUserActionAsync(user, "VerifyEmail", actor);
+
+        public Task RecordRefreshTokenAsync(User user, ClaimsPrincipal? actor = null) =>
+            RecordUserActionAsync(user, "RefreshToken", actor);
     }
 }
 

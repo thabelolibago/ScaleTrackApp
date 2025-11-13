@@ -1,9 +1,9 @@
 using System.Security.Claims;
 using ScaleTrackAPI.Application.Errors.AppError;
 using ScaleTrackAPI.Application.Errors.ErrorMessages;
-using ScaleTrackAPI.Application.Features.Auth.BusinessRules.AuthAuditTrail;
 using ScaleTrackAPI.Application.Features.Auth.Logout.DTOs;
 using ScaleTrackAPI.Application.Features.Auth.Refresh.Services;
+using ScaleTrackAPI.Application.Features.Auth.Shared.AuditTrail;
 
 
 namespace ScaleTrackAPI.Application.Features.Auth.Logout.Services
@@ -12,12 +12,12 @@ namespace ScaleTrackAPI.Application.Features.Auth.Logout.Services
     {
        
         private readonly IRefreshTokenService _refreshTokenService;
-        private readonly AuthAuditTrail _auditTrail;
+        private readonly AuthAuditTrail _authAuditTrail;
         public LogoutService(AuthAuditTrail auditTrail, IRefreshTokenService refreshTokenService)
         {
             
             _refreshTokenService = refreshTokenService;
-            _auditTrail = auditTrail;
+            _authAuditTrail = auditTrail;
 
         }
 
@@ -28,7 +28,7 @@ namespace ScaleTrackAPI.Application.Features.Auth.Logout.Services
                 return AppError.NotFound(ErrorMessages.Get("Auth:InvalidRefreshToken"));
 
             await _refreshTokenService.MarkRefreshTokenRevokedAsync(stored);
-            await _auditTrail.RecordLogout(stored.User!, actor);
+            await _authAuditTrail.RecordLogoutAsync(stored.User!, actor);
 
             return null;
         }
