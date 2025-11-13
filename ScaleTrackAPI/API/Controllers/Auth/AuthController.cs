@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
-using ScaleTrackAPI.Application.Features.Auth.DTOs.Token;
 using ScaleTrackAPI.Application.Features.Auth.Login.DTOs;
 using ScaleTrackAPI.Application.Features.Auth.Login.Services;
 using ScaleTrackAPI.Application.Features.Auth.Logout.DTOs;
 using ScaleTrackAPI.Application.Features.Auth.Logout.Services;
+using ScaleTrackAPI.Application.Features.Auth.Refresh.DTOs;
 using ScaleTrackAPI.Application.Features.Auth.RegisterUser.DTOs;
 using ScaleTrackAPI.Application.Features.Auth.ResendVerification.Services;
 using ScaleTrackAPI.Application.Features.Auth.Services;

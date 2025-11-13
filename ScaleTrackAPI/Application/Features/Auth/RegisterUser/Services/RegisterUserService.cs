@@ -2,7 +2,7 @@ using ScaleTrackAPI.Application.Errors.AppError;
 using ScaleTrackAPI.Application.Errors.ErrorMessages;
 using ScaleTrackAPI.Application.Features.Auth.RegisterUser.BusinessRules;
 using ScaleTrackAPI.Application.Features.Auth.RegisterUser.DTOs;
-using ScaleTrackAPI.Application.Features.Auth.Services;
+using ScaleTrackAPI.Application.Features.Auth.Services.Shared.Token;
 using ScaleTrackAPI.Application.Features.Users.Mappers.UserMapper;
 
 namespace ScaleTrackAPI.Application.Features.RegisterUser

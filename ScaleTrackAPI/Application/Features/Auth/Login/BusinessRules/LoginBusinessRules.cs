@@ -1,7 +1,7 @@
 using ScaleTrackAPI.Application.Errors.AppError;
 using ScaleTrackAPI.Application.Errors.ErrorMessages;
-using ScaleTrackAPI.Application.Features.Auth.DTOs.Token;
 using ScaleTrackAPI.Application.Features.Auth.Login.DTOs;
+using ScaleTrackAPI.Application.Features.Auth.Refresh.DTOs;
 using ScaleTrackAPI.Infrastructure.Repositories.Interfaces.IUserRepository;
 
 namespace ScaleTrackAPI.Application.Features.Auth.Login.BusinessRules
