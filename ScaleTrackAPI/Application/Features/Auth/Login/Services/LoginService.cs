@@ -8,6 +8,7 @@ using ScaleTrackAPI.Application.Features.Auth.Login.Mappers;
 using ScaleTrackAPI.Application.Features.Auth.Refresh.DTOs;
 using ScaleTrackAPI.Application.Features.Auth.Refresh.Services;
 using ScaleTrackAPI.Application.Features.Auth.Services.Shared.Token;
+using ScaleTrackAPI.Application.Features.Auth.Shared.AuditTrail;
 using ScaleTrackAPI.Domain.Entities;
 using ScaleTrackAPI.Infrastructure.Data;
 using ScaleTrackAPI.Infrastructure.Services.Base;
@@ -23,7 +24,7 @@ namespace ScaleTrackAPI.Application.Features.Auth.Login.Services
         private readonly ITokenService _tokenService;
         private readonly PasswordHelper _passwordHelper;
         private readonly LoginBusinessRules _rules;
-        private readonly LoginAuditTrail _auditTrail;
+        private readonly AuthAuditTrail _authAuditTrail;
 
         public LoginService(
             AppDbContext context,
@@ -33,7 +34,7 @@ namespace ScaleTrackAPI.Application.Features.Auth.Login.Services
             ITokenService tokenService,
             PasswordHelper passwordHelper,
             LoginBusinessRules rules,
-            LoginAuditTrail auditTrail
+            AuthAuditTrail authAuditTrail
         ) : base(context)
         {
             _userManager = userManager;
@@ -42,7 +43,7 @@ namespace ScaleTrackAPI.Application.Features.Auth.Login.Services
             _tokenService = tokenService;
             _passwordHelper = passwordHelper;
             _rules = rules;
-            _auditTrail = auditTrail;
+            _authAuditTrail = authAuditTrail;
         }
 
         public async Task<(LoginResponse? Entity, AppError? Error)> LoginAsync(LoginRequest request, ClaimsPrincipal actor)
@@ -62,7 +63,7 @@ namespace ScaleTrackAPI.Application.Features.Auth.Login.Services
             if (user.RequiresEmailVerification && !user.IsEmailVerified)
                 return (null, AppError.Unauthorized(ErrorMessages.Get("Email:EmailNotVerified")));
 
-            await _auditTrail.RecordLogin(user, actor);
+            await _authAuditTrail.RecordLoginAsync(user, actor);
 
             var response = await GenerateLoginResponseAsync(user);
             return (response, null);
@@ -83,7 +84,7 @@ namespace ScaleTrackAPI.Application.Features.Auth.Login.Services
                 await _refreshTokenService.MarkRefreshTokenUsedAsync(storedToken);
 
                 var user = storedToken.User!;
-                await _auditTrail.RecordTokenRefresh(user, actor);
+                await _authAuditTrail.RecordTokenRefreshAsync(user, actor);
 
                 var response = await GenerateLoginResponseAsync(user);
                 return (response, null);

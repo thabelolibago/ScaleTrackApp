@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using ScaleTrackAPI.Application.Errors.AppError;
 using ScaleTrackAPI.Application.Errors.ErrorMessages;
-using ScaleTrackAPI.Application.Features.Auth.DTOs.Password;
+using ScaleTrackAPI.Application.Features.Auth.Password.ChangePassword.DTOs;
 using ScaleTrackAPI.Application.Features.Auth.Password.ChangePassword.Services.ChangePasswordService;
 using ScaleTrackAPI.Application.Features.Profile.EditProfile.BusinessRules.EditProfileAuditTrail;
 using ScaleTrackAPI.Application.Features.Profile.EditProfile.DTOs;

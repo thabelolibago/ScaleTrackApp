@@ -3,6 +3,7 @@ using ScaleTrackAPI.Application.Errors.ErrorMessages;
 using ScaleTrackAPI.Application.Features.Auth.RegisterUser.BusinessRules;
 using ScaleTrackAPI.Application.Features.Auth.RegisterUser.DTOs;
 using ScaleTrackAPI.Application.Features.Auth.Services.Shared.Token;
+using ScaleTrackAPI.Application.Features.Auth.Shared.AuditTrail;
 using ScaleTrackAPI.Application.Features.Users.Mappers.UserMapper;
 
 namespace ScaleTrackAPI.Application.Features.RegisterUser
@@ -12,12 +13,12 @@ namespace ScaleTrackAPI.Application.Features.RegisterUser
        
         private readonly ITokenService _tokenService;
         private readonly RegisterUserBusinessRules _registerUserBusinessRules;
-        private readonly RegisterUserAuditTrail _auditHelper;
+        private readonly AuthAuditTrail _auditHelper;
 
         public RegisterUserService(
             ITokenService tokenService,
             RegisterUserBusinessRules registerUserBusinessRules,
-            RegisterUserAuditTrail auditHelper)
+            AuthAuditTrail auditHelper)
         {
             
             _tokenService = tokenService;
@@ -44,7 +45,7 @@ namespace ScaleTrackAPI.Application.Features.RegisterUser
             if (error != null)
                 return (null, error);
 
-            await _auditHelper.RecordCreate(user!);
+            await _auditHelper.RecordRegisterAsync(user!);
 
             // Generate tokens
             var (accessToken, refreshToken) = await _tokenService.CreateTokensAsync(user!);

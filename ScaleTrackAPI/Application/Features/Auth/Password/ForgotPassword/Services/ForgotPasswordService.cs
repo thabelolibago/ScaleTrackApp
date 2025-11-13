@@ -1,6 +1,7 @@
-using ScaleTrackAPI.Application.Features.Auth.DTOs.Password;
-using ScaleTrackAPI.Application.Features.Auth.Mappers.Password.PasswordResetMapper;
 using ScaleTrackAPI.Application.Features.Auth.Password.ForgotPassword.BusinessRules.ForgotPasswordBusinessRules;
+using ScaleTrackAPI.Application.Features.Auth.Password.ForgotPassword.DTOs;
+using ScaleTrackAPI.Application.Features.Auth.Password.Mappers;
+using ScaleTrackAPI.Application.Features.Auth.Password.ResetPassword.DTOs;
 using ScaleTrackAPI.Application.Features.Auth.Password.Shared.PasswordAuditTrail;
 using ScaleTrackAPI.Application.Features.Auth.Password.Shared.PasswordResetTokenService;
 using ScaleTrackAPI.Application.Messages.SuccessMessages;

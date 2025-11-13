@@ -1,9 +1,10 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using ScaleTrackAPI.Application.Errors.ErrorMessages;
-using ScaleTrackAPI.Application.Features.Auth.DTOs.Password;
-using ScaleTrackAPI.Application.Features.Auth.Mappers.Password.PasswordResetMapper;
 using ScaleTrackAPI.Application.Features.Auth.Password.ChangePassword.BusinessRules.ChangePasswordBusinessRules;
+using ScaleTrackAPI.Application.Features.Auth.Password.ChangePassword.DTOs;
+using ScaleTrackAPI.Application.Features.Auth.Password.Mappers;
+using ScaleTrackAPI.Application.Features.Auth.Password.ResetPassword.DTOs;
 using ScaleTrackAPI.Application.Features.Auth.Password.Shared.PasswordAuditTrail;
 using ScaleTrackAPI.Application.Features.Auth.Password.Shared.UserPasswordService;
 using ScaleTrackAPI.Application.Messages.SuccessMessages;
