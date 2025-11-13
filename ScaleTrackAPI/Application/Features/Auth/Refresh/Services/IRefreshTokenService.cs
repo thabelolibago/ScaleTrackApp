@@ -1,10 +1,9 @@
 using ScaleTrackAPI.Domain.Entities;
 
-namespace ScaleTrackAPI.Application.Features.Auth.Services
+namespace ScaleTrackAPI.Application.Features.Auth.Refresh.Services
 {
-    public interface ITokenService
+    public interface IRefreshTokenService
     {
-        Task<(string AccessToken, string RefreshToken)> CreateTokensAsync(User user);
         Task<RefreshToken?> GetRefreshTokenAsync(string token);
         Task MarkRefreshTokenUsedAsync(RefreshToken token);
         Task MarkRefreshTokenRevokedAsync(RefreshToken token);

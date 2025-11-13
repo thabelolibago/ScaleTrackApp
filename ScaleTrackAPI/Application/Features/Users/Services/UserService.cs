@@ -2,10 +2,6 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using ScaleTrackAPI.Application.Errors.AppError;
 using ScaleTrackAPI.Application.Errors.ErrorMessages;
-using ScaleTrackAPI.Application.Features.Auth.BusinessRules.AuthBusinessRules;
-using ScaleTrackAPI.Application.Features.Auth.ResendVerification.BusinessRules;
-using ScaleTrackAPI.Application.Features.Auth.Services;
-using ScaleTrackAPI.Application.Features.Auth.VerifyEmail.BusinessRules;
 using ScaleTrackAPI.Application.Features.Auth.VerifyEmail.Services;
 using ScaleTrackAPI.Application.Features.Users.BusinessRules.UserAuditTrail;
 using ScaleTrackAPI.Application.Features.Users.DTOs;
@@ -14,8 +10,6 @@ using ScaleTrackAPI.Application.Messages.SuccessMessages;
 using ScaleTrackAPI.Domain.Entities;
 using ScaleTrackAPI.Domain.Enums;
 using ScaleTrackAPI.Infrastructure.Repositories.Interfaces.IUserRepository;
-using ScaleTrackAPI.Shared.Helpers;
-using ScaleTrackAPI.Shared.Validators;
 
 namespace ScaleTrackAPI.Application.Features.Users.Services.UserService
 {
@@ -23,35 +17,22 @@ namespace ScaleTrackAPI.Application.Features.Users.Services.UserService
     {
         private readonly IUserRepository _repo;
         private readonly UserManager<User> _userManager;
-        private readonly IValidator<UserRequest> _validator;
-        private readonly PasswordHelper _passwordHelper;
         private readonly UserAuditTrail _auditHelper;
-        private readonly ITokenService _tokenService;
         private readonly IVerifyEmailService _verifyEmailService;
-        private readonly ResendVerificationBusinessRules _resendVerificationBusinessRules;
-        private readonly AuthBusinessRules _authRules;
+    
 
         public UserService(
             IUserRepository repo,
             UserManager<User> userManager,
-            IValidator<UserRequest> validator,
-            PasswordHelper passwordHelper,
             UserAuditTrail auditHelper,
-            ITokenService tokenService,
-            IVerifyEmailService verifyEmailService,
-            ResendVerificationBusinessRules resendVerificationBusinessRules,
-            AuthBusinessRules authRules
+            IVerifyEmailService verifyEmailService
+           
         )
         {
             _repo = repo;
             _userManager = userManager;
-            _validator = validator;
-            _passwordHelper = passwordHelper;
             _auditHelper = auditHelper;
-            _tokenService = tokenService;
             _verifyEmailService = verifyEmailService;
-            _resendVerificationBusinessRules = resendVerificationBusinessRules;
-            _authRules = authRules;
         }
 
         public async Task<List<UserResponse>> GetAllUsers()
@@ -73,8 +54,6 @@ namespace ScaleTrackAPI.Application.Features.Users.Services.UserService
 
             return (true, null);
         }
-
-       
 
         public async Task<(AppError? Error, string Message)> UpdateUserRole(int id, int roleIndex, ClaimsPrincipal userClaims)
         {

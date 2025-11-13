@@ -6,11 +6,11 @@ using ScaleTrackAPI.Application.Features.Auth.Password.ForgotPassword.Services.F
 using ScaleTrackAPI.Application.Features.Auth.Password.ResetPassword.Services.ResetPasswordService;
 using ScaleTrackAPI.Application.Features.Auth.Password.Shared.PasswordResetTokenService;
 using ScaleTrackAPI.Application.Features.Auth.Password.Shared.UserPasswordService;
+using ScaleTrackAPI.Application.Features.Auth.Refresh.Services;
 using ScaleTrackAPI.Application.Features.Auth.ResendVerification.Services;
 using ScaleTrackAPI.Application.Features.Auth.Services;
 using ScaleTrackAPI.Application.Features.Auth.Services.AuthService;
-
-using ScaleTrackAPI.Application.Features.Auth.Services.TokenService;
+using ScaleTrackAPI.Application.Features.Auth.Services.Shared.Token;
 using ScaleTrackAPI.Application.Features.Auth.VerifyEmail.Services;
 using ScaleTrackAPI.Application.Features.Comments.Services.CommentService;
 using ScaleTrackAPI.Application.Features.Issues.Services.IssueService;
@@ -47,6 +47,7 @@ namespace ScaleTrackAPI.Shared.Extensions
             services.AddScoped<ILogoutService, LogoutService>();
             services.AddScoped<IResendVerificationService, ResendVerificationService>();
             services.AddScoped<IVerifyEmailService, VerifyEmailService>();
+            services.AddScoped<IRefreshTokenService, RefreshTokenService>();
             
             return services;
         }

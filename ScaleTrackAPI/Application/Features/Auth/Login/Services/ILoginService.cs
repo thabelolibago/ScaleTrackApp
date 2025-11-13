@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using ScaleTrackAPI.Application.Errors.AppError;
-using ScaleTrackAPI.Application.Features.Auth.DTOs.Token;
 using ScaleTrackAPI.Application.Features.Auth.Login.DTOs;
+using ScaleTrackAPI.Application.Features.Auth.Refresh.DTOs;
 using ScaleTrackAPI.Domain.Entities;
 
 namespace ScaleTrackAPI.Application.Features.Auth.Login.Services

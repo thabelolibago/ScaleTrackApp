@@ -1,3 +1,4 @@
+using ScaleTrackAPI.Application.Features.Auth.Services.Shared.Token;
 using ScaleTrackAPI.Domain.Entities;
 using ScaleTrackAPI.Infrastructure.Data;
 using ScaleTrackAPI.Infrastructure.Services.Base;

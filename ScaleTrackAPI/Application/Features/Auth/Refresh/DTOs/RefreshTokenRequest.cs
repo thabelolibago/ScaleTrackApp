@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace ScaleTrackAPI.Application.Features.Auth.DTOs.Token
+namespace ScaleTrackAPI.Application.Features.Auth.Refresh.DTOs
 {
     public class RefreshTokenRequest
     {

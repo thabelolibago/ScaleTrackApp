@@ -2,11 +2,12 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using ScaleTrackAPI.Application.Errors.AppError;
 using ScaleTrackAPI.Application.Errors.ErrorMessages;
-using ScaleTrackAPI.Application.Features.Auth.DTOs.Token;
 using ScaleTrackAPI.Application.Features.Auth.Login.BusinessRules;
 using ScaleTrackAPI.Application.Features.Auth.Login.DTOs;
 using ScaleTrackAPI.Application.Features.Auth.Login.Mappers;
-using ScaleTrackAPI.Application.Features.Auth.Services;
+using ScaleTrackAPI.Application.Features.Auth.Refresh.DTOs;
+using ScaleTrackAPI.Application.Features.Auth.Refresh.Services;
+using ScaleTrackAPI.Application.Features.Auth.Services.Shared.Token;
 using ScaleTrackAPI.Domain.Entities;
 using ScaleTrackAPI.Infrastructure.Data;
 using ScaleTrackAPI.Infrastructure.Services.Base;
@@ -18,6 +19,7 @@ namespace ScaleTrackAPI.Application.Features.Auth.Login.Services
     {
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
+        private readonly IRefreshTokenService _refreshTokenService;
         private readonly ITokenService _tokenService;
         private readonly PasswordHelper _passwordHelper;
         private readonly LoginBusinessRules _rules;
@@ -27,6 +29,7 @@ namespace ScaleTrackAPI.Application.Features.Auth.Login.Services
             AppDbContext context,
             UserManager<User> userManager,
             SignInManager<User> signInManager,
+            IRefreshTokenService refreshTokenService,
             ITokenService tokenService,
             PasswordHelper passwordHelper,
             LoginBusinessRules rules,
@@ -35,6 +38,7 @@ namespace ScaleTrackAPI.Application.Features.Auth.Login.Services
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _refreshTokenService = refreshTokenService;
             _tokenService = tokenService;
             _passwordHelper = passwordHelper;
             _rules = rules;
@@ -71,12 +75,12 @@ namespace ScaleTrackAPI.Application.Features.Auth.Login.Services
 
             return await ExecuteInTransactionAsync<(LoginResponse? Entity, AppError? Error)>(async () =>
             {
-                var storedToken = await _tokenService.GetRefreshTokenAsync(request.RefreshToken);
+                var storedToken = await _refreshTokenService.GetRefreshTokenAsync(request.RefreshToken);
 
                 if (storedToken == null || storedToken.IsRevoked || storedToken.IsUsed || storedToken.Expires < DateTime.UtcNow)
                     return (null, AppError.Unauthorized(ErrorMessages.Get("Token:TokenExpired")));
 
-                await _tokenService.MarkRefreshTokenUsedAsync(storedToken);
+                await _refreshTokenService.MarkRefreshTokenUsedAsync(storedToken);
 
                 var user = storedToken.User!;
                 await _auditTrail.RecordTokenRefresh(user, actor);

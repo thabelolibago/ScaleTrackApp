@@ -5,10 +5,6 @@ namespace ScaleTrackAPI.Application.Features.Auth.Services
 {
     public interface IAuthService
     {
-        
-        
-        
-        
         Task<(string AccessToken, string RefreshToken)> GenerateTokensAsync(User user);
     }
 }

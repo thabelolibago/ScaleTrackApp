@@ -6,7 +6,7 @@ using ScaleTrackAPI.Domain.Entities;
 using ScaleTrackAPI.Infrastructure.Repositories.Interfaces.IRefreshTokenRepository;
 
 
-namespace ScaleTrackAPI.Application.Features.Auth.Services.TokenService
+namespace ScaleTrackAPI.Application.Features.Auth.Services.Shared.Token
 {
     public class TokenService : ITokenService
     {
@@ -66,24 +66,7 @@ namespace ScaleTrackAPI.Application.Features.Auth.Services.TokenService
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        public async Task<RefreshToken?> GetRefreshTokenAsync(string token)
-        {
-            return await _refreshTokenRepo.GetByTokenAsync(token);
-        }
-
-        public async Task MarkRefreshTokenUsedAsync(RefreshToken token)
-        {
-            token.IsUsed = true;
-            await _refreshTokenRepo.UpdateAsync(token);
-            await _refreshTokenRepo.SaveChangesAsync();
-        }
-
-        public async Task MarkRefreshTokenRevokedAsync(RefreshToken token)
-        {
-            token.IsRevoked = true;
-            await _refreshTokenRepo.UpdateAsync(token);
-            await _refreshTokenRepo.SaveChangesAsync();
-        }
+        
     }
 }
 
