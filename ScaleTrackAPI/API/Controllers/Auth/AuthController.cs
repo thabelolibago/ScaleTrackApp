@@ -5,6 +5,7 @@ using ScaleTrackAPI.Application.Features.Auth.Login.Services;
 using ScaleTrackAPI.Application.Features.Auth.Logout.DTOs;
 using ScaleTrackAPI.Application.Features.Auth.Logout.Services;
 using ScaleTrackAPI.Application.Features.Auth.RegisterUser.DTOs;
+using ScaleTrackAPI.Application.Features.Auth.ResendVerification.Services;
 using ScaleTrackAPI.Application.Features.Auth.Services;
 using ScaleTrackAPI.Application.Features.Auth.VerifyEmail.Services;
 using ScaleTrackAPI.Application.Features.RegisterUser;
@@ -20,6 +21,7 @@ namespace ScaleTrackAPI.Controllers.Auth.AuthController
         private readonly ILoginService _loginService;
         private readonly ILogoutService _logoutService;
         private readonly IVerifyEmailService _verifyEmailService;
+        private readonly IResendVerificationService _resendVerificationService;
         private readonly IConfiguration _config;
 
         public AuthController(
@@ -28,6 +30,7 @@ namespace ScaleTrackAPI.Controllers.Auth.AuthController
             ILogoutService logoutService,
             RegisterUserService userService,
             IVerifyEmailService verifyEmailService,
+            IResendVerificationService resendVerificationService,
             IConfiguration config)
         {
             _authService = authService;
@@ -35,6 +38,7 @@ namespace ScaleTrackAPI.Controllers.Auth.AuthController
             _logoutService = logoutService;
             _userService = userService;
             _verifyEmailService = verifyEmailService;
+            _resendVerificationService = resendVerificationService;
             _config = config;
         }
 
@@ -88,7 +92,7 @@ namespace ScaleTrackAPI.Controllers.Auth.AuthController
         public async Task<IActionResult> ResendVerification([FromQuery] string email)
         {
             string baseUrl = _config["App:FrontendUrl"] ?? "http://localhost:4200";
-            var error = await _authService.ResendVerificationEmailAsync(email, baseUrl);
+            var error = await _resendVerificationService.ResendVerificationEmailAsync(email, baseUrl);
             if (error != null) return StatusCode(error.StatusCode, error);
             return Ok();
         }

@@ -3,7 +3,10 @@ using Microsoft.AspNetCore.Identity;
 using ScaleTrackAPI.Application.Errors.AppError;
 using ScaleTrackAPI.Application.Errors.ErrorMessages;
 using ScaleTrackAPI.Application.Features.Auth.BusinessRules.AuthBusinessRules;
+using ScaleTrackAPI.Application.Features.Auth.ResendVerification.BusinessRules;
 using ScaleTrackAPI.Application.Features.Auth.Services;
+using ScaleTrackAPI.Application.Features.Auth.VerifyEmail.BusinessRules;
+using ScaleTrackAPI.Application.Features.Auth.VerifyEmail.Services;
 using ScaleTrackAPI.Application.Features.Users.BusinessRules.UserAuditTrail;
 using ScaleTrackAPI.Application.Features.Users.DTOs;
 using ScaleTrackAPI.Application.Features.Users.Mappers.UserMapper;
@@ -24,6 +27,8 @@ namespace ScaleTrackAPI.Application.Features.Users.Services.UserService
         private readonly PasswordHelper _passwordHelper;
         private readonly UserAuditTrail _auditHelper;
         private readonly ITokenService _tokenService;
+        private readonly IVerifyEmailService _verifyEmailService;
+        private readonly ResendVerificationBusinessRules _resendVerificationBusinessRules;
         private readonly AuthBusinessRules _authRules;
 
         public UserService(
@@ -33,6 +38,8 @@ namespace ScaleTrackAPI.Application.Features.Users.Services.UserService
             PasswordHelper passwordHelper,
             UserAuditTrail auditHelper,
             ITokenService tokenService,
+            IVerifyEmailService verifyEmailService,
+            ResendVerificationBusinessRules resendVerificationBusinessRules,
             AuthBusinessRules authRules
         )
         {
@@ -42,6 +49,8 @@ namespace ScaleTrackAPI.Application.Features.Users.Services.UserService
             _passwordHelper = passwordHelper;
             _auditHelper = auditHelper;
             _tokenService = tokenService;
+            _verifyEmailService = verifyEmailService;
+            _resendVerificationBusinessRules = resendVerificationBusinessRules;
             _authRules = authRules;
         }
 
@@ -57,26 +66,15 @@ namespace ScaleTrackAPI.Application.Features.Users.Services.UserService
 
         public async Task<(bool Success, AppError? Error)> VerifyEmail(string token)
         {
-            var result = await _authRules.VerifyEmailAsync(token);
+            var result = await _verifyEmailService.VerifyEmailAsync(token);
 
-            if (!result.Success)
+            if (result != null)
                 return (false, AppError.Validation(ErrorMessages.Get("Auth:InvalidToken")));
 
             return (true, null);
         }
 
-        public async Task<AppError?> ResendVerificationEmail(string email, string baseUrl)
-        {
-            var user = await _repo.GetByEmail(email);
-            if (user == null)
-                return AppError.NotFound(ErrorMessages.Get("User:UserNotFound", email));
-
-            if (user.IsEmailVerified)
-                return AppError.Conflict(ErrorMessages.Get("User:EmailAlreadyExits"));
-
-            await _authRules.GenerateEmailVerificationAsync(user, baseUrl);
-            return null;
-        }
+       
 
         public async Task<(AppError? Error, string Message)> UpdateUserRole(int id, int roleIndex, ClaimsPrincipal userClaims)
         {
