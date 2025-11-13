@@ -5,6 +5,7 @@ using ScaleTrackAPI.Application.Errors.ErrorMessages;
 using ScaleTrackAPI.Application.Features.Auth.RegisterUser.DTOs;
 using ScaleTrackAPI.Application.Features.Auth.RegisterUser.Mappers;
 using ScaleTrackAPI.Domain.Entities;
+using ScaleTrackAPI.Domain.Enums;
 using ScaleTrackAPI.Infrastructure.Repositories.Interfaces.IUserRepository;
 using ScaleTrackAPI.Shared.Helpers;
 
@@ -32,17 +33,29 @@ namespace ScaleTrackAPI.Application.Features.Auth.RegisterUser.BusinessRules
         }
 
         public async Task<(AppError? Error, User? User, bool VerificationPending, DateTime? ExpiresAt)>
-     RegisterUserRules(RegisterUserRequest request, string baseUrl)
+    RegisterUserRules(RegisterUserRequest request, string baseUrl)
         {
             if (request == null)
-                return (AppError.Validation(ErrorMessages.Get("Request:RequestNotNull")), null, false, null);
+                return (AppError.Validation(ErrorMessages.Get("Validation:RequestNotNull")), null, false, null);
 
+            // Check if a user with this email already exists
+            var existingUser = await _repo.GetByEmail(request.Email);
+            if (existingUser != null)
+            {
+                if (!existingUser.IsEmailVerified)
+                    return (AppError.Conflict(ErrorMessages.Get("User:EmailNotVerified")), null, false, null);
+
+                var message = string.Format(ErrorMessages.Get("User:EmailAlreadyExists"), request.Email);
+                return (AppError.Conflict(message), null, false, null);
+            }
+
+            // Create new user model
             var user = RegisterUserMapper.ToModel(request);
-
-            // Default: all new users require verification
+            user.Role = UserRole.Viewer;
             user.IsEmailVerified = false;
             user.RequiresEmailVerification = true;
 
+            // Hash password with pepper
             var password = _passwordHelper.WithPepper(request.Password);
             var result = await _userManager.CreateAsync(user, password);
             if (!result.Succeeded)
@@ -51,11 +64,11 @@ namespace ScaleTrackAPI.Application.Features.Auth.RegisterUser.BusinessRules
                 return (AppError.Validation(errors), null, false, null);
             }
 
+            // Add role claim
             await _userManager.AddClaimAsync(user, new Claim(ClaimTypes.Role, user.Role.ToString()));
 
+            // Email verification
             DateTime? verificationExpiresAt = DateTime.UtcNow.AddHours(24);
-            bool verificationPending = true;
-
             user.EmailVerificationToken = Guid.NewGuid().ToString("N");
             user.EmailVerificationTokenExpiry = verificationExpiresAt;
             await _repo.Update(user);
@@ -64,7 +77,7 @@ namespace ScaleTrackAPI.Application.Features.Auth.RegisterUser.BusinessRules
             string emailBody = _emailHelper.BuildEmailVerificationEmail(user, verifyLink);
             await _emailHelper.SendEmailAsync(user.Email!, "Verify Your Email", emailBody);
 
-            return (null, user, verificationPending, verificationExpiresAt);
+            return (null, user, true, verificationExpiresAt);
         }
 
     }
