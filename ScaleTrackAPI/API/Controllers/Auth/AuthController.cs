@@ -76,7 +76,7 @@ namespace ScaleTrackAPI.Controllers.Auth.AuthController
         /// Verifies a user's email with a token.
         /// GET api/v1/auth/verify-email?token=
         /// </summary>
-        [HttpGet("verify-email")]
+        [HttpPost("verify-email")]
         public async Task<IActionResult> VerifyEmail([FromQuery] string token)
         {
             var error = await _verifyEmailService.VerifyEmailAsync(token);
