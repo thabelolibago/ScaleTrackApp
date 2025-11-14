@@ -64,28 +64,6 @@ namespace ScaleTrackAPI.Shared.Helpers
             _context.AuditTrails.Add(audit);
             await _context.SaveChangesAsync();
         }
-
-        /// <summary>
-        /// Convenience overload for user-related actions.
-        /// </summary>
-        public Task RecordUserActionAsync(User user, string action, ClaimsPrincipal? actor = null)
-        {
-            object changedBy = actor != null ? actor : (object)user.Email;
-            return RecordAuditAsync(action, user.Id, null, user, "User", changedBy);
-        }
-
-        // === Optional Convenience Shortcuts ===
-        public Task RecordLoginAsync(User user, ClaimsPrincipal? actor = null) =>
-            RecordUserActionAsync(user, "Login", actor);
-
-        public Task RecordLogoutAsync(User user, ClaimsPrincipal? actor = null) =>
-            RecordUserActionAsync(user, "Logout", actor);
-
-        public Task RecordVerifyEmailAsync(User user, ClaimsPrincipal? actor = null) =>
-            RecordUserActionAsync(user, "VerifyEmail", actor);
-
-        public Task RecordRefreshTokenAsync(User user, ClaimsPrincipal? actor = null) =>
-            RecordUserActionAsync(user, "RefreshToken", actor);
     }
 }
 
