@@ -1,13 +1,14 @@
-using ScaleTrackAPI.Application.Features.Users.DTOs;
-
 namespace ScaleTrackAPI.Application.Features.Auth.RegisterUser.DTOs
 {
+    /// <summary>
+    /// Response returned when a user registers but has not verified email yet.
+    /// Only contains a friendly message.
+    /// </summary>
     public class RegisterUserResponse
     {
-        public UserResponse User { get; set; } = null!;
-        public string AccessToken { get; set; } = null!;
-        public string RefreshToken { get; set; } = null!;
-        public bool VerificationPending { get; set; } = false;
-        public DateTime? VerificationExpiresAt { get; set; }
+        /// <summary>
+        /// Friendly message for the client
+        /// </summary>
+        public string Message { get; set; } = string.Empty;
     }
 }

@@ -5,6 +5,6 @@ namespace ScaleTrackAPI.Application.Features.Auth.VerifyEmail.Services
 {
     public interface IVerifyEmailService
     {
-        Task<AppError?> VerifyEmailAsync(string token, ClaimsPrincipal? actor = null);
+        Task<AppError?> VerifyEmailAsync(string token);
     }
 }
