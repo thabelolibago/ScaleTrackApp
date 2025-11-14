@@ -21,6 +21,11 @@ namespace ScaleTrackAPI.Application.Errors.AppError
         public static AppError Forbidden(string message) => new(403, message);
 
         /// <summary>
+        /// Represents an expired resource (e.g., token, link) error.
+        /// </summary>
+        public static AppError Expired(string message) => new(410, message);
+        
+        /// <summary>
         /// Represents an unexpected (unhandled) server-side error.
         /// </summary>
         public static AppError Unexpected(string message) => new(500, message);

@@ -4,6 +4,7 @@ using ScaleTrackAPI.Application.Features.Auth.VerifyEmail.BusinessRules;
 using ScaleTrackAPI.Infrastructure.Data;
 using ScaleTrackAPI.Infrastructure.Services.Base;
 using ScaleTrackAPI.Application.Features.Auth.Shared.AuditTrail;
+using ScaleTrackAPI.Infrastructure.Repositories.Interfaces.IUserRepository;
 
 namespace ScaleTrackAPI.Application.Features.Auth.VerifyEmail.Services
 {
@@ -11,30 +12,42 @@ namespace ScaleTrackAPI.Application.Features.Auth.VerifyEmail.Services
     {
         private readonly VerifyEmailBusinessRules _rules;
         private readonly AuthAuditTrail _authAuditTrail;
+        private readonly IUserRepository _repo;
 
         public VerifyEmailService(
             AppDbContext context,
             VerifyEmailBusinessRules rules,
-            AuthAuditTrail authAuditTrail
+            AuthAuditTrail authAuditTrail,
+            IUserRepository repo    
         ) : base(context)
         {
             _rules = rules;
             _authAuditTrail = authAuditTrail;
+            _repo = repo;
         }
 
-        public async Task<AppError?> VerifyEmailAsync(string token, ClaimsPrincipal? actor = null)
+        public async Task<AppError?> VerifyEmailAsync(string token)
         {
-            return await ExecuteInTransactionAsync<AppError?>(async () =>
-            {
-                var (success, message, user) = await _rules.VerifyEmailAsync(token);
+            var user = await _repo.GetByVerificationToken(token);
 
-                if (!success)
-                    return AppError.Validation(message);
+            if (user == null)
+                return AppError.NotFound("Invalid or expired verification token.");
 
-                await _authAuditTrail.RecordVerifyEmailAsync(user!, actor);
+            if (user.EmailVerificationTokenExpiry < DateTime.UtcNow)
+                return AppError.Expired("Verification link has expired.");
 
-                return null;
-            });
+            // Mark verified
+            user.IsEmailVerified = true;
+            user.RequiresEmailVerification = false;
+            user.EmailVerificationToken = null;
+            user.EmailVerificationTokenExpiry = null;
+
+            await _repo.Update(user);
+
+            await _authAuditTrail.RecordVerifyEmailAsync(user);
+
+            return null;
         }
+
     }
 }
